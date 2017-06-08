@@ -81,7 +81,6 @@ import pyspark_cassandra
 ```
 
 
-
 Building
 --------
 
