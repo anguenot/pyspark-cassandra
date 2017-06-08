@@ -19,3 +19,5 @@ metastore_db
 /bin/
 .sp-creds.txt
 *.ipynb
+
+.idea

@@ -8,7 +8,7 @@ $DIR/lib/spark-1.6.0-bin-hadoop2.6/bin/pyspark \
 	--conf spark.cassandra.connection.host="localhost" \
 	--driver-memory 2g \
 	--master local[*] \
-	--jars $DIR/target/scala-2.10/pyspark-cassandra-assembly-$VERSION.jar \
-	--py-files $DIR/target/scala-2.10/pyspark-cassandra-assembly-$VERSION.jar \
+	--jars $DIR/target/scala-2.11/pyspark-cassandra-assembly-$VERSION.jar \
+	--py-files $DIR/target/scala-2.11/pyspark-cassandra-assembly-$VERSION.jar \
 	$@
 

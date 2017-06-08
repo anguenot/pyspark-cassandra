@@ -14,11 +14,10 @@
 
 package pyspark_cassandra
 
-import com.datastax.driver.core.{ ProtocolVersion, Row => DriverRow }
-import com.datastax.spark.connector.ColumnRef
+import com.datastax.driver.core.{Row => DriverRow}
 import com.datastax.spark.connector.cql.TableDef
 import com.datastax.spark.connector.rdd.reader.{RowReader, RowReaderFactory}
-import com.datastax.spark.connector.GettableData
+import com.datastax.spark.connector.{CassandraRowMetadata, ColumnRef, GettableData}
 
 /** A container for a 'raw' row from the java driver, to be deserialized. */
 case class UnreadRow(row: DriverRow, columnNames: Array[String], table: TableDef) {
@@ -38,9 +37,9 @@ class DeferringRowReader(table: TableDef, selectedColumns: IndexedSeq[ColumnRef]
 
   override def neededColumns: Option[Seq[ColumnRef]] = None // TODO or selected columns?
 
-  override def read(row: DriverRow, columns: Array[String]): UnreadRow = {
-    assert(row.getColumnDefinitions().size() >= columns.size, "Not enough columns available in row")
-    UnreadRow(row, columns, table)
+  override def read(row: DriverRow, rowMetaData: CassandraRowMetadata): UnreadRow =  {
+    assert(row.getColumnDefinitions().size() >= rowMetaData.columnNames.length, "Not enough columns available in row")
+    UnreadRow(row, rowMetaData.columnNames.toArray, table)
   }
 }
 

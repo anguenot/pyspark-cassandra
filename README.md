@@ -5,14 +5,13 @@ PySpark Cassandra is no longer maintained. Development effort has moved away fro
 
 ---
 
-[![Build Status](https://travis-ci.org/TargetHolding/pyspark-cassandra.svg)](https://travis-ci.org/TargetHolding/pyspark-cassandra)
-[![Codacy Badge](https://api.codacy.com/project/badge/grade/1fb73418b06b4db18e3a4103a0ce056c)](https://www.codacy.com/app/frensjan/pyspark-cassandra)
+[![Build Status](https://travis-ci.org/anguenot/pyspark-cassandra.svg)](https://travis-ci.org/anguenot/pyspark-cassandra)
 
 PySpark Cassandra brings back the fun in working with Cassandra data in PySpark.
 
 This module provides python support for Apache Spark's Resillient Distributed Datasets from Apache Cassandra CQL rows using [Cassandra Spark Connector](https://github.com/datastax/spark-cassandra-connector) within PySpark, both in the interactive shell and in python programmes submitted with spark-submit.
 
-This project was initially forked from https://github.com/Parsely/pyspark-cassandra, but in order to submit it to http://spark-packages.org/, a plain old repository was created. 
+This project was initially forked from https://github.com/TargetHolding/pyspark-cassandra because this project is no longer maintained.
 
 **Contents:**
 * [Compatibility](#compatibility)
@@ -35,15 +34,13 @@ The current version of PySpark Cassandra is succesfully used with Spark version 
 
 ### Cassandra
 PySpark Cassandra is compatible with Cassandra:
-* 2.1.5 and higher
-* 2.2
-* 3
+* 3.0
 
 ### Python
-PySpark Cassandra is used with python 2.7, python 3.3 and 3.4.
+PySpark Cassandra is used with python 2.7, python 3.6.
 
 ### Scala
-PySpark Cassandra is currently only packaged for Scala 2.10
+PySpark Cassandra is currently only packaged for Scala 2.11
 
 
 
@@ -51,10 +48,10 @@ Using with PySpark
 ------------------
 
 ### With Spark Packages
-Pyspark Cassandra is published at [Spark Packages](http://spark-packages.org/package/TargetHolding/pyspark-cassandra). This allows easy usage with Spark through:
+Pyspark Cassandra is published at [Spark Packages](http://spark-packages.org/package/anguenot/pyspark-cassandra). This allows easy usage with Spark through:
 ```bash
 spark-submit \
-	--packages TargetHolding/pyspark-cassandra:<version> \
+	--packages anguenot/pyspark-cassandra:<version> \
 	--conf spark.cassandra.connection.host=your,cassandra,node,names
 ```
 
@@ -88,7 +85,7 @@ import pyspark_cassandra
 Building
 --------
 
-### For [Spark Packages](http://spark-packages.org/package/TargetHolding/pyspark-cassandra) Pyspark Cassandra can be published using:
+### For [Spark Packages](http://spark-packages.org/package/anguenot/pyspark-cassandra) Pyspark Cassandra can be published using:
 ```bash
 sbt compile
 ```
@@ -108,7 +105,7 @@ A Java / JVM library as well as a python library is required to use PySpark Cass
 make dist
 ```
 
-This creates a fat jar with the Spark Cassandra Connector and additional classes for bridging Spark and PySpark for Cassandra data and the .py source files at: `target/scala-2.10/pyspark-cassandra-assembly-<version>.jar`
+This creates a fat jar with the Spark Cassandra Connector and additional classes for bridging Spark and PySpark for Cassandra data and the .py source files at: `target/scala-2.11/pyspark-cassandra-assembly-<version>.jar`
 
 
 
