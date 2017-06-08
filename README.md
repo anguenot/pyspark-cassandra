@@ -1,10 +1,6 @@
 PySpark Cassandra
 =================
 
-PySpark Cassandra is no longer maintained. Development effort has moved away from Spark to pure Python environment.
-
----
-
 [![Build Status](https://travis-ci.org/anguenot/pyspark-cassandra.svg)](https://travis-ci.org/anguenot/pyspark-cassandra)
 
 PySpark Cassandra brings back the fun in working with Cassandra data in PySpark.
