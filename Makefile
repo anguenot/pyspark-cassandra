@@ -57,6 +57,7 @@ test-integration-teardown: \
 	
 test-integration-matrix: \
 	install-cassandra-driver \
+	test-integration-spark-2.0.2 \
 	test-integration-spark-2.1.1
 
 test-travis: install-cassandra-driver
@@ -64,6 +65,9 @@ test-travis: install-cassandra-driver
 
 test-integration-spark-2.1.1:
 	$(call test-integration-for-version,2.1.1,hadoop2.7)
+
+test-integration-spark-2.0.2:
+	$(call test-integration-for-version,2.0.2,hadoop2.7)
 
 define test-integration-for-version
 	echo ======================================================================

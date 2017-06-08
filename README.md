@@ -26,11 +26,13 @@ Compatibility
 Feedback on (in-)compatibility is much appreciated.
 
 ### Spark
-The current version of PySpark Cassandra is succesfully used with Spark version 1.5 and 1.6. Use older versions for Spark 1.2, 1.3 or 1.4.
+The current version of PySpark Cassandra is successfully used with Spark version 2.0 and 2.1. Use older versions for Spark 1.5, 1.6.
 
 ### Cassandra
 PySpark Cassandra is compatible with Cassandra:
-* 3.0
+* 2.1.5*
+* 2.2.x
+* 3.0.x
 
 ### Python
 PySpark Cassandra is used with python 2.7, python 3.6.
