@@ -184,6 +184,17 @@ class _CassandraRDD(RDD):
         else:
             return self.limit(num).take(num)
 
+    def collect(self):
+        """
+        Return a list that contains all of the elements in this RDD.
+
+        .. note:: This method should only be used if the resulting array is expected
+            to be small, as all the data is loaded into the driver's memory.
+        """
+        if self._limit:
+            return self.take(self._limit)
+        else:
+            return super(_CassandraRDD, self).collect()
 
     def cassandraCount(self):
         """Lets Cassandra perform a count, instead of loading data to Spark"""
