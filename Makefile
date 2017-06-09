@@ -117,5 +117,5 @@ publish: clean
 		zip ../pyspark-cassandra-$(VERSION).zip pyspark-cassandra-$(VERSION).jar
 
 	# send the package to spark-packages
-	spark-package publish -c ".sp-creds.txt" -n "anguenot/pyspark-cassandra" -v $(VERSION) -f . -z target/pyspark-cassandra-$(VERSION).zip
+	spark-package publish -c ".sp-creds.txt"  -n "anguenot/pyspark-cassandra" -v "$(VERSION)" -f . -z target/pyspark-cassandra-$(VERSION).zip
 
