@@ -16,7 +16,7 @@ package pyspark_cassandra
 
 import java.io.OutputStream
 import java.nio.ByteBuffer
-import java.util.{UUID, List => JList, Map => JMap}
+import java.util.UUID
 
 import com.datastax.driver.core.{UDTValue => DriverUDTValue}
 import com.datastax.spark.connector.UDTValue
