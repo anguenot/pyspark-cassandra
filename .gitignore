@@ -21,3 +21,5 @@ metastore_db
 *.ipynb
 
 .idea
+pyspark-cassandra.iml
+src/main/scala/scala.iml

@@ -14,13 +14,12 @@
 
 package pyspark_cassandra
 
-import java.nio.ByteBuffer
+import com.datastax.driver.core.DataType
+import com.datastax.spark.connector.{GettableData, toRDDFunctions}
+import org.apache.spark.rdd.RDD
+
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ArrayBuffer
-import org.apache.spark.rdd.RDD
-import com.datastax.driver.core.{ DataType, ProtocolVersion }
-import com.datastax.spark.connector.toRDDFunctions
-import com.datastax.spark.connector.GettableData
 
 case class DataFrame(names: Array[String], types: Array[String], values: Seq[ArrayBuffer[Any]])
 

@@ -14,17 +14,15 @@
 
 package pyspark_cassandra
 
-import java.nio.ByteBuffer
-import java.lang.{ Boolean => JBoolean }
-import java.util.{ List => JList, Map => JMap }
-import scala.reflect.ClassTag
-import scala.collection.JavaConversions._
-import scala.collection.mutable.Buffer
-import org.apache.spark.SparkContext
-import com.datastax.driver.core.{ CodecRegistry, ConsistencyLevel, DataType, ProtocolVersion }
+import java.util.{Map => JMap}
+
+import com.datastax.driver.core.ConsistencyLevel
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.rdd._
 import com.datastax.spark.connector.writer._
+import org.apache.spark.SparkContext
+
+import scala.collection.JavaConversions._
 
 object Utils {
   def columnSelector(columns: Array[String], default: ColumnSelector = AllColumns) = {

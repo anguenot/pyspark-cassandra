@@ -14,23 +14,20 @@
 
 package pyspark_cassandra
 
-import pyspark_cassandra.Utils._
-import pyspark_util.Pickling._
-import pyspark_util.Conversions._
 import java.lang.Boolean
-import java.util.{ List => JList, Map => JMap }
-import scala.collection.JavaConversions._
-import org.apache.spark.SparkContext
-import org.apache.spark.api.java.{ JavaRDD, JavaSparkContext }
-import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.api.java.JavaDStream
-import org.apache.spark.streaming.dstream.DStream
-import com.datastax.driver.core.ConsistencyLevel
+import java.util.{Map => JMap}
+
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.rdd._
 import com.datastax.spark.connector.streaming.toDStreamFunctions
-import com.datastax.spark.connector.writer._
 import com.datastax.spark.connector.types.TypeConverter
+import org.apache.spark.api.java.{JavaRDD, JavaSparkContext}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.api.java.JavaDStream
+import org.apache.spark.streaming.dstream.DStream
+import pyspark_cassandra.Utils._
+import pyspark_util.Conversions._
+import pyspark_util.Pickling._
 
 class PythonHelper() {
   TypeConverter.registerConverter(UnpickledUUIDConverter)

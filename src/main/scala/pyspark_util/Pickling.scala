@@ -14,25 +14,25 @@
 
 package pyspark_util
 
-import java.io.{ NotSerializableException, OutputStream }
+import java.io.{NotSerializableException, OutputStream}
 import java.math.BigInteger
-import java.net.{ Inet4Address, Inet6Address, InetAddress }
+import java.net.{Inet4Address, Inet6Address, InetAddress}
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
-import java.util.{ ArrayList, Collection, HashMap, List => JList, Map => JMap, UUID }
-import scala.reflect.ClassTag
-import scala.collection.JavaConversions._
-import scala.collection.convert.Wrappers.{JListWrapper, JSetWrapper, JMapWrapper}
-import scala.collection.immutable.HashMap.HashTrieMap
-import scala.collection.immutable.HashSet.{HashSet1, HashTrieSet}
-import scala.collection.immutable.{List, Set, Vector}
-import scala.collection.immutable.Map.{ Map1, Map2, Map3, Map4, WithDefault }
-import scala.collection.mutable.{ ArraySeq, Buffer, WrappedArray }
-import scala.reflect.runtime.universe.typeTag
-import net.razorvine.pickle.{ IObjectConstructor, IObjectPickler, Opcodes, PickleUtils, Pickler, Unpickler }
+import java.util.{Collection, HashMap, UUID, List => JList, Map => JMap}
+
+import net.razorvine.pickle._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
-import Conversions._
+import pyspark_util.Conversions._
+
+import scala.collection.JavaConversions._
+import scala.collection.convert.Wrappers.{JListWrapper, JMapWrapper, JSetWrapper}
+import scala.collection.immutable.HashMap.HashTrieMap
+import scala.collection.immutable.HashSet.{HashSet1, HashTrieSet}
+import scala.collection.immutable.Map.{Map1, Map2, Map3, Map4, WithDefault}
+import scala.collection.immutable.{Set, Vector}
+import scala.collection.mutable.{ArraySeq, Buffer, WrappedArray}
 
 class Pickling extends Serializable {
   register()

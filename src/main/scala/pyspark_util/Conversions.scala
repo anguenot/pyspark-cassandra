@@ -14,13 +14,12 @@
 
 package pyspark_util
 
-import java.nio.ByteBuffer
-import java.lang.{ Boolean => JBoolean }
-import java.util.{ List => JList, Map => JMap }
+import java.lang.{Boolean => JBoolean}
+import java.util.{List => JList, Map => JMap}
 
-import scala.reflect.ClassTag
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Buffer
+import scala.reflect.ClassTag
 
 object Conversions {
   def asArray[T: ClassTag](c: Any): Array[T] = c match {
