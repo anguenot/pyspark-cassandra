@@ -59,13 +59,11 @@ spark-submit \
 ```bash
 spark-submit \
 	--jars /path/to/pyspark-cassandra-assembly-<version>.jar \
-	--driver-class-path /path/to/pyspark-cassandra-assembly-<version>.jar \
 	--py-files /path/to/pyspark-cassandra-assembly-<version>.jar \
 	--conf spark.cassandra.connection.host=your,cassandra,node,names \
 	--master spark://spark-master:7077 \
 	yourscript.py
 ```
-(note that the the --driver-class-path due to [SPARK-5185](https://issues.apache.org/jira/browse/SPARK-5185))
 (also not that the assembly will include the python source files, quite similar to a python source distribution)
 
 
