@@ -81,6 +81,22 @@ class PythonHelper() {
     rdd.rdd.unpickle().saveToCassandra(keyspace, table, selectedColumns, conf)
   }
 
+  /* ----------------------------------------------------------------------- */
+  /* delete from cassandra ----------------------------------------------------- */
+  /* ----------------------------------------------------------------------- */
+
+  /* rdds ------------------------------------------------------------------ */
+
+  def deleteFromCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String, columns: Array[String],
+    rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any]) = {
+
+    val selectedColumns = columnSelector(columns)
+    val conf = parseWriteConf(Some(writeConf))
+
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    rdd.rdd.unpickle().deleteFromCassandra(keyspace, table, selectedColumns, conf)
+  }
+
   /* dstreams -------------------------------------------------------------- */
 
   def saveToCassandra(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String, columns: Array[String],
