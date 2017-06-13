@@ -92,6 +92,65 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None, row_format=Non
         )
 
 
+def deleteFromCassandra(rdd, keyspace=None, table=None, columns=None, row_format=None, keyed=None,
+                        write_conf=None, **write_conf_kwargs):
+    '''
+        Delete an RDD from Cassandra. The RDD is expected to contain dicts with keys mapping to CQL
+        primary keys.
+
+        Arguments:
+        @param rdd(RDD):
+            The RDD to delete.
+        @param keyspace(string):in
+            The keyspace to delete the RDD from. If not given and the rdd is a CassandraRDD the same
+            keyspace is used.
+        @param table(string):
+            The CQL table to delete the RDD from. If not given and the rdd is a CassandraRDD the same
+            table is used.
+
+        Keyword arguments:
+        @param columns(iterable):
+            The columns to delete.
+
+        @param row_format(RowFormat):
+            Make explicit how to map the RDD elements into Cassandra rows.
+            If None given the mapping is auto-detected as far as possible.
+        @param keyed(bool):
+            Make explicit that the RDD consists of key, value tuples (and not arrays of length
+            two).
+
+        @param write_conf(WriteConf):
+            A WriteConf object to use when deleting Cassandra
+        @param **write_conf_kwargs:
+            WriteConf parameters to use when deleting from Cassandra
+    '''
+
+    keyspace = keyspace or getattr(rdd, 'keyspace', None)
+    if not keyspace:
+        raise ValueError("keyspace not set")
+
+    table = table or getattr(rdd, 'table', None)
+    if not table:
+        raise ValueError("table not set")
+
+    # create write config as map
+    write_conf = WriteConf.build(write_conf, **write_conf_kwargs)
+    write_conf = as_java_object(rdd.ctx._gateway, write_conf.settings())
+    # convert the columns to a string array
+    columns = as_java_array(rdd.ctx._gateway, "String", columns) if columns else None
+
+    helper(rdd.ctx) \
+        .deleteFromCassandra(
+            rdd._jrdd,
+            keyspace,
+            table,
+            columns,
+            row_format,
+            keyed,
+            write_conf,
+        )
+
+
 class _CassandraRDD(RDD):
     '''
         A Resilient Distributed Dataset of Cassandra CQL rows. As any RDD, objects of this class
