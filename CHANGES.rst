@@ -6,6 +6,7 @@ CHANGES
 ------------------
 
 * cleanups: build, imports, format etc.
+* expose `deleteFromCassandra()` binding on `pyspark_cassandra.CassandraRDD` and `pyspark_cassandra.streaming`
 
 0.4.0 (2017-06-09)
 ------------------

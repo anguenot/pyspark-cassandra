@@ -198,12 +198,14 @@ A `CassandraRDD` is very similar to a regular `RDD` in pyspark. It is extended w
 * ``saveToCassandra(...)``: As above, but the keyspace and/or table __may__ be omitted to save to the same keyspace and/or table. 
 * ``spanBy(*columns)``: Groups rows by the given columns without shuffling. 
 * ``joinWithCassandraTable(keyspace, table)``: Join an RDD with a Cassandra table on the partition key. Use .on(...) to specifiy other columns to join on. .select(...), .where(...) and .limit(...) can be used as well.
+* ``deleteFromCassandra(keyspace, table, ...)``: Delete rows and columns from cassandra by implicit `deleteFromCassandra` call
 
 
 ### pyspark_cassandra.streaming
 
 When importing ```pyspark_cassandra.streaming``` the method ``saveToCassandra(...)``` is made available on DStreams. Also support for joining with a Cassandra table is added:
 * ``joinWithCassandraTable(keyspace, table, selected_columns, join_columns)``: 
+* ``deleteFromCassandra(keyspace, table, ...)``: Delete rows and columns from cassandra by implicit `deleteFromCassandra` call
 
 
 Examples
