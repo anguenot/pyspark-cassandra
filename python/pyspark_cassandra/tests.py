@@ -573,6 +573,208 @@ class JoinDStreamTest(StreamingTest):
             self.assertEqual(len(right), 1)
 
 
+class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
+
+    size = 10
+    interval = .1
+
+    def setUp(self):
+        super(DeleteFromCassandraStreamingTest, self).setUp()
+        self.ssc = StreamingContext(self.sc, self.interval)
+
+        self.rdds = [self.sc.parallelize(range(0, self.size)).map(lambda i: {'key':i, 'int':i, 'text': i})]
+        data = self.rdds[0]
+        data.saveToCassandra(self.keyspace, self.table)
+
+        # verify the RDD length and actual content
+        data = self.rdd()
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify we have actually data for `text` and `int`
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertEqual(row.text, u'0')
+        self.assertEqual(row.int, 0)
+
+        # stream we will use in tests.
+        self.stream = self.ssc.queueStream(self.rdds)
+
+    def test_delete_single_column(self):
+
+        self.stream\
+            .deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text'])
+
+        self.ssc.start()
+        self.ssc.awaitTermination((self.size + 1) * self.interval)
+        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
+
+        data = self.rdd()
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify we have actually data for `text` and `int`
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertEqual(row.int, 0)
+        self.assertIsNone(row.text)
+
+    def test_delete_2_columns(self):
+
+        self.stream \
+            .deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text', 'int'])
+
+        self.ssc.start()
+        self.ssc.awaitTermination((self.size + 1) * self.interval)
+        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
+
+        data = self.rdd()
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify we have actually data for `text` and `int`
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertIsNone(row.int)
+        self.assertIsNone(row.text)
+
+    def test_delete_all_rows_default(self):
+
+        self.stream \
+            .deleteFromCassandra(self.keyspace, self.table)
+
+        self.ssc.start()
+        self.ssc.awaitTermination((self.size + 1) * self.interval)
+        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
+
+        data = self.rdd()
+        self.assertEqual(len(data.collect()), 0)
+
+    def test_delete_all_rows_explicit(self):
+
+        self.stream \
+            .deleteFromCassandra(self.keyspace, self.table, keyColumns=['key'])
+
+        self.ssc.start()
+        self.ssc.awaitTermination((self.size + 1) * self.interval)
+        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
+
+        data = self.rdd()
+        self.assertEqual(len(data.collect()), 0)
+
+
+class DeleteFromCassandraTest(SimpleTypesTestBase):
+
+    size = 1000
+
+    def setUp(self):
+        super(DeleteFromCassandraTest, self).setUp()
+        data = self.sc.parallelize(range(0, self.size)).map(lambda i: {'key':i, 'int':i, 'text': i})
+        data.saveToCassandra(self.keyspace, self.table)
+
+    def test_delete_selected_cols_seq(self):
+        data = self.rdd()
+
+        # verify the RDD length.
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify we have actually data for `text` and `int`
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertEqual(row.text, u'0')
+        self.assertEqual(row.int, 0)
+
+        # delete content in the text table only.
+        data.deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text'])
+
+        # verify the RDD length did not change.
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify the `text` column got deleted.
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertIsNone(row.text)
+        self.assertEqual(row.int, 0)
+
+        # delete content in the `int` column.
+        data.deleteFromCassandra(self.keyspace, self.table, deleteColumns=['int'])
+
+        # verify the RDD length did not change.
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify the `int` column got deleted.
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertIsNone(row.text)
+        self.assertIsNone(row.int)
+
+        # reload RDD and check the columns are still deleted.
+        data = self.rdd()
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertIsNone(row.text)
+        self.assertIsNone(row.int)
+
+    def test_delete_selected_cols(self):
+        data = self.rdd()
+
+        # verify the RDD length.
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify we have actually data for `text` and `int`
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertEqual(row.text, u'0')
+        self.assertEqual(row.int, 0)
+
+        # delete content in the text table only.
+        data.deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text', 'int'])
+
+        # verify the RDD length did not change.
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify the `text` and `int` columns got deleted.
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertIsNone(row.text)
+        self.assertIsNone(row.int)
+
+        # reload RDD and check the columns are still deleted.
+        data = self.rdd()
+        row = data.select('text', 'int').where('key=?', '0').first()
+        self.assertIsNone(row.text)
+        self.assertIsNone(row.int)
+
+    def test_delete_all_rows_default(self):
+        data = self.rdd()
+
+        # verify the RDD length.
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify we have actually data for `text` and `int`
+        row = data.select('key', 'text', 'int').where('key=?', '0').first()
+        self.assertEqual(row.key, u'0')
+        self.assertEqual(row.text, u'0')
+        self.assertEqual(row.int, 0)
+
+        # delete all content
+        data.deleteFromCassandra(self.keyspace, self.table)
+
+        # verify the RDD length.
+        self.assertEqual(len(data.collect()), 0)
+
+        data = self.rdd()
+        self.assertEqual(len(data.collect()), 0)
+
+    def test_delete_all_rows_explicit(self):
+        data = self.rdd()
+
+        # verify the RDD length.
+        self.assertEqual(len(data.collect()), self.size)
+
+        # verify we have actually data for `text` and `int`
+        row = data.select('key', 'text', 'int').where('key=?', '0').first()
+        self.assertEqual(row.key, u'0')
+        self.assertEqual(row.text, u'0')
+        self.assertEqual(row.int, 0)
+
+        # delete all content
+        data.deleteFromCassandra(self.keyspace, self.table, keyColumns=['key'])
+
+        # verify the RDD length.
+        self.assertEqual(len(data.collect()), 0)
+
+        data = self.rdd()
+        self.assertEqual(len(data.collect()), 0)
+
 
 class RegressionTest(CassandraTestCase):
     def test_64(self):

@@ -42,9 +42,10 @@ __all__ = [
 
 
 # Monkey patch the default python RDD so that it can be stored to Cassandra as CQL rows
-from .rdd import saveToCassandra, joinWithCassandraTable
+from .rdd import saveToCassandra, joinWithCassandraTable, deleteFromCassandra
 pyspark.rdd.RDD.saveToCassandra = saveToCassandra
 pyspark.rdd.RDD.joinWithCassandraTable = joinWithCassandraTable
+pyspark.rdd.RDD.deleteFromCassandra = deleteFromCassandra
 
 # Monkey patch the sc variable in the caller if any
 frame = inspect.currentframe().f_back

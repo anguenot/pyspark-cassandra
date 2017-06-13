@@ -121,6 +121,36 @@ class PythonHelper() {
   }
 
   /* ----------------------------------------------------------------------- */
+  /* delete from cassandra --------------------------------------------------*/
+  /* ----------------------------------------------------------------------- */
+
+  /* rdds ------------------------------------------------------------------ */
+
+  def deleteFromCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String,
+                          deleteColumns: Array[String], keyColumns: Array[String],
+                          rowFormat: Integer, keyed: Boolean,
+                          writeConf: JMap[String, Any]) = {
+    val deletes = columnSelector(deleteColumns, SomeColumns())
+    val keys = columnSelector(keyColumns, PrimaryKeyColumns)
+    val conf = parseWriteConf(Some(writeConf))
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    rdd.rdd.unpickle().deleteFromCassandra(keyspace, table, deletes, keys, conf)
+    }
+
+  /* dstreams ------------------------------------------------------------------ */
+
+  def deleteFromCassandra(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String,
+                          deleteColumns: Array[String], keyColumns: Array[String],
+                          rowFormat: Integer, keyed: Boolean,
+                          writeConf: JMap[String, Any]) = {
+    val deletes = columnSelector(deleteColumns, SomeColumns())
+    val keys = columnSelector(keyColumns, PrimaryKeyColumns)
+    val conf = parseWriteConf(Some(writeConf))
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    dstream.dstream.unpickle().deleteFromCassandra(keyspace, table, deletes, keys, conf)
+  }
+
+  /* ----------------------------------------------------------------------- */
   /* utilities for moving rdds and dstreams from and to pyspark ------------ */
   /* ----------------------------------------------------------------------- */
 

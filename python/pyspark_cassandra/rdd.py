@@ -91,6 +91,71 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None, row_format=Non
             write_conf,
         )
 
+def deleteFromCassandra(rdd, keyspace=None, table=None, deleteColumns=None,
+                        keyColumns=None, row_format=None, keyed=None,
+                        write_conf=None, **write_conf_kwargs):
+    '''
+        Delete data from Cassandra table, using data from the RDD as primary keys.
+        Uses the specified column names.
+
+        Arguments:
+        @param rdd(RDD):
+            The RDD to save. Equals to self when invoking saveToCassandra on a monkey patched RDD.
+        @param keyspace(string):in
+            The keyspace to save the RDD in. If not given and the rdd is a CassandraRDD the same
+            keyspace is used.
+        @param table(string):
+            The CQL table to save the RDD in. If not given and the rdd is a CassandraRDD the same
+            table is used.
+
+        Keyword arguments:
+        @param deleteColumns(iterable):
+            The list of column names to delete, empty ColumnSelector means full row.
+
+        @param keyColumns(iterable):
+            The list of column names to delete, empty ColumnSelector means full row.
+
+        @param row_format(RowFormat):
+            Primary key columns selector, Optional. All RDD primary columns columns will be checked by default
+        @param keyed(bool):
+            Make explicit that the RDD consists of key, value tuples (and not arrays of length
+            two).
+
+        @param write_conf(WriteConf):
+            A WriteConf object to use when saving to Cassandra
+        @param **write_conf_kwargs:
+            WriteConf parameters to use when saving to Cassandra
+    '''
+
+    keyspace = keyspace or getattr(rdd, 'keyspace', None)
+    if not keyspace:
+        raise ValueError("keyspace not set")
+
+    table = table or getattr(rdd, 'table', None)
+    if not table:
+        raise ValueError("table not set")
+
+    # create write config as map
+    write_conf = WriteConf.build(write_conf, **write_conf_kwargs)
+    write_conf = as_java_object(rdd.ctx._gateway, write_conf.settings())
+
+    # convert the columns to a string array
+    deleteColumns = as_java_array(rdd.ctx._gateway, "String", deleteColumns) \
+        if deleteColumns else None
+    keyColumns = as_java_array(rdd.ctx._gateway, "String", keyColumns) \
+        if keyColumns else None
+
+    helper(rdd.ctx) \
+        .deleteFromCassandra(
+                rdd._jrdd,
+                keyspace,
+                table,
+                deleteColumns,
+                keyColumns,
+                row_format,
+                keyed,
+                write_conf,
+            )
 
 class _CassandraRDD(RDD):
     '''
@@ -149,6 +214,7 @@ class _CassandraRDD(RDD):
 
 
     saveToCassandra = saveToCassandra
+    deleteFromCassandra = deleteFromCassandra
 
 
     def select(self, *columns):
