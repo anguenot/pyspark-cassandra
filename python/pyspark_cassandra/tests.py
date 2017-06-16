@@ -10,30 +10,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from _functools import partial
-from datetime import datetime, timedelta
-from decimal import Decimal
 import string
 import sys
 import time
 import unittest
 import uuid
+from _functools import partial
+from datetime import datetime, timedelta
+from decimal import Decimal
+from itertools import chain
+from math import sqrt
+from uuid import UUID
 
 from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
-
 from pyspark import SparkConf
 from pyspark.accumulators import AddingAccumulatorParam
 from pyspark.streaming.context import StreamingContext
 
-from pyspark_cassandra import CassandraSparkContext, RowFormat, Row, UDT
 import pyspark_cassandra
 import pyspark_cassandra.streaming
+from pyspark_cassandra import CassandraSparkContext, RowFormat, Row, UDT
 from pyspark_cassandra.conf import ReadConf, WriteConf
-from itertools import chain
-from math import sqrt
-from uuid import UUID
 
 
 class CassandraTestCase(unittest.TestCase):
@@ -61,7 +60,6 @@ class CassandraTestCase(unittest.TestCase):
         rdd = self.sc.parallelize([row])
         rdd.saveToCassandra(self.keyspace, self.table)
         return self.read_test(type_name, value)
-
 
 
 class SimpleTypesTestBase(CassandraTestCase):
@@ -135,8 +133,8 @@ class SimpleTypesTest(SimpleTypesTestBase):
         self.read_write_test('varint', 1)
 
     def test_uuid(self):
-        self.read_write_test('uuid', uuid.UUID('22dadfd0-b971-11e4-a856-85a08dca5bbf'))
-
+        self.read_write_test('uuid',
+                             uuid.UUID('22dadfd0-b971-11e4-a856-85a08dca5bbf'))
 
 
 class CollectionTypesTest(CassandraTestCase):
@@ -154,7 +152,8 @@ class CollectionTypesTest(CassandraTestCase):
             CREATE TABLE IF NOT EXISTS %s (
                 key text primary key, %s
             )
-        ''' % (cls.table, ', '.join('%s %s' % (k, v) for k, v in cls.collection_types.items())))
+        ''' % (cls.table, ', '.join(
+            '%s %s' % (k, v) for k, v in cls.collection_types.items())))
 
     @classmethod
     def tearDownClass(cls):
@@ -166,13 +165,14 @@ class CollectionTypesTest(CassandraTestCase):
 
     def collections_common_tests(self, collection, column):
         rows = [
-            {'key':k, column:v}
+            {'key': k, column: v}
             for k, v in collection.items()
         ]
 
         self.sc.parallelize(rows).saveToCassandra(self.keyspace, self.table)
 
-        rdd = self.sc.cassandraTable(self.keyspace, self.table).select('key', column).cache()
+        rdd = self.sc.cassandraTable(
+            self.keyspace, self.table).select('key', column).cache()
         self.assertEqual(len(collection), rdd.count())
 
         collected = rdd.collect()
@@ -184,17 +184,20 @@ class CollectionTypesTest(CassandraTestCase):
         return rdd
 
     def test_list(self):
-        lists = {'l%s' % i: list(string.ascii_lowercase[:i]) for i in range(1, 10)}
+        lists = {'l%s' % i: list(string.ascii_lowercase[:i]) for i in
+                 range(1, 10)}
         self.collections_common_tests(lists, 'l')
 
     def test_map(self):
-        maps = {'m%s' % i : {k : 'x' for k in string.ascii_lowercase[:i]} for i in range(1, 10)}
+        maps = {
+            'm%s' % i: {k: 'x' for k in string.ascii_lowercase[:i]} for i in
+            range(1, 10)}
         self.collections_common_tests(maps, 'm')
 
     def test_set(self):
-        maps = {'s%s' % i : set(string.ascii_lowercase[:i]) for i in range(1, 10)}
+        maps = {'s%s' % i: set(string.ascii_lowercase[:i]) for i in
+                range(1, 10)}
         self.collections_common_tests(maps, 's')
-
 
 
 class UDTTest(CassandraTestCase):
@@ -231,7 +234,8 @@ class UDTTest(CassandraTestCase):
             )
 
             fields += ', ' + ', '.join(
-                '{udt_type}_{col_type} {col_type}<frozen<{udt_type}>>'.format(udt_type=udt_type, col_type=col_type)
+                '{udt_type}_{col_type} {col_type}<frozen<{udt_type}>>'.format(
+                    udt_type=udt_type, col_type=col_type)
                 for udt_type in cls.types
                 for col_type in ('set', 'list')
             )
@@ -244,7 +248,8 @@ class UDTTest(CassandraTestCase):
 
     def setUp(self):
         if not self.udt_support:
-            self.skipTest("testing with Cassandra < 2.2, can't test with UDT's")
+            self.skipTest("testing with Cassandra < 2.2, "
+                          "can't test with UDT's")
 
         super(UDTTest, self).setUp()
         self.session.execute('TRUNCATE %s' % self.table)
@@ -259,42 +264,49 @@ class UDTTest(CassandraTestCase):
             self.assertEqual(getattr(read, field), value[field])
 
     def test_simple_udt(self):
-        self.read_write_test('simple_udt', UDT(col_text='text', col_int=1, col_boolean=True))
+        self.read_write_test('simple_udt',
+                             UDT(col_text='text', col_int=1, col_boolean=True))
 
     def test_simple_udt_null(self):
         super(UDTTest, self).read_write_test('simple_udt', None)
 
     def test_simple_udt_null_field(self):
-        self.read_write_test('simple_udt', UDT(col_text='text', col_int=None, col_boolean=True))
-        self.read_write_test('simple_udt', UDT(col_text=None, col_int=1, col_boolean=True))
+        self.read_write_test('simple_udt', UDT(col_text='text', col_int=None,
+                                               col_boolean=True))
+        self.read_write_test('simple_udt',
+                             UDT(col_text=None, col_int=1, col_boolean=True))
 
     def test_udt_wset(self):
-        self.read_write_test('udt_wset', UDT(col_text='text', col_set={1, 2, 3}))
+        self.read_write_test('udt_wset',
+                             UDT(col_text='text', col_set={1, 2, 3}))
 
     def test_collection_of_udts(self):
         super(UDTTest, self).read_write_test('simple_udt_list', None)
 
-        udts = [UDT(col_text='text ' + str(i), col_int=i, col_boolean=bool(i % 2)) for i in range(10)]
+        udts = [
+            UDT(col_text='text ' + str(i), col_int=i, col_boolean=bool(i % 2))
+            for i in range(10)]
         super(UDTTest, self).read_write_test('simple_udt_set', set(udts))
         super(UDTTest, self).read_write_test('simple_udt_list', udts)
 
-        udts = [UDT(col_text='text ' + str(i), col_int=i, col_boolean=None) for i in range(10)]
+        udts = [UDT(col_text='text ' + str(i), col_int=i, col_boolean=None) for
+                i in range(10)]
         super(UDTTest, self).read_write_test('simple_udt_set', set(udts))
         super(UDTTest, self).read_write_test('simple_udt_list', udts)
-
 
 
 class SelectiveSaveTest(SimpleTypesTestBase):
     def _save_and_get(self, *row):
         columns = ['key', 'text']
-        self.sc.parallelize(row).saveToCassandra(self.keyspace, self.table, columns=columns)
+        self.sc.parallelize(row).saveToCassandra(self.keyspace, self.table,
+                                                 columns=columns)
         rdd = self.rdd().select(*columns)
         self.assertEqual(rdd.count(), 1)
         return rdd.first()
 
-
     def test_row(self):
-        row = Row(key='selective-save-test-row', int=2, text='a', boolean=False)
+        row = Row(
+            key='selective-save-test-row', int=2, text='a', boolean=False)
         read = self._save_and_get(row)
 
         for k in ['key', 'text']:
@@ -302,9 +314,9 @@ class SelectiveSaveTest(SimpleTypesTestBase):
         for k in ['boolean', 'int']:
             self.assertIsNone(getattr(read, k, None))
 
-
     def test_dict(self):
-        row = dict(key='selective-save-test-row', int=2, text='a', boolean=False)
+        row = dict(key='selective-save-test-row', int=2, text='a',
+                   boolean=False)
         read = self._save_and_get(row)
 
         for k in ['key', 'text']:
@@ -313,13 +325,13 @@ class SelectiveSaveTest(SimpleTypesTestBase):
             self.assertIsNone(getattr(read, k, None))
 
 
-
 class LimitAndTakeTest(SimpleTypesTestBase):
     size = 1000
 
     def setUp(self):
         super(LimitAndTakeTest, self).setUp()
-        data = self.sc.parallelize(range(0, self.size)).map(lambda i: {'key':i, 'int':i})
+        data = self.sc.parallelize(range(0, self.size)).map(
+            lambda i: {'key': i, 'int': i})
         data.saveToCassandra(self.keyspace, self.table)
 
     def test_limit(self):
@@ -337,7 +349,8 @@ class FormatTest(SimpleTypesTestBase):
 
     def setUp(self):
         super(FormatTest, self).setUp()
-        self.sc.parallelize([self.expected]).saveToCassandra(self.keyspace, self.table)
+        self.sc.parallelize([self.expected]).saveToCassandra(self.keyspace,
+                                                             self.table)
 
     def read_as(self, row_format, keyed):
         table = self.rdd(row_format=row_format)
@@ -384,9 +397,9 @@ class FormatTest(SimpleTypesTestBase):
         self.assertEqual(self.expected.key, k.key)
 
 
-
 class ConfTest(SimpleTypesTestBase):
-    # TODO this is still a very basic test, more cases and (better) validation required
+    # TODO this is still a very basic test, more cases and (better) validation
+    # required
     def setUp(self):
         super(SimpleTypesTestBase, self).setUp()
         for i in range(100):
@@ -402,11 +415,14 @@ class ConfTest(SimpleTypesTestBase):
         self.rdd(consistency_level='LOCAL_QUORUM').collect()
         self.rdd(consistency_level=ConsistencyLevel.LOCAL_QUORUM).collect()
         self.rdd(metrics_enabled=True).collect()
-        self.rdd(read_conf=ReadConf(split_count=10, consistency_level='ALL')).collect()
-        self.rdd(read_conf=ReadConf(consistency_level='ALL', metrics_enabled=True)).collect()
+        self.rdd(read_conf=ReadConf(split_count=10,
+                                    consistency_level='ALL')).collect()
+        self.rdd(read_conf=ReadConf(consistency_level='ALL',
+                                    metrics_enabled=True)).collect()
 
     def test_write_conf(self):
-        rdd = self.sc.parallelize([{'key':i, 'text':i, 'int':i} for i in range(10)])
+        rdd = self.sc.parallelize(
+            [{'key': i, 'text': i, 'int': i} for i in range(10)])
         save = partial(rdd.saveToCassandra, self.keyspace, self.table)
 
         save(batch_size=100)
@@ -464,7 +480,6 @@ class StreamingTest(SimpleTypesTestBase):
 
 
 class JoinRDDTest(SimpleTypesTestBase):
-
     def setUp(self):
         super(JoinRDDTest, self).setUp()
 
@@ -479,13 +494,14 @@ class JoinRDDTest(SimpleTypesTestBase):
         self.session.execute('TRUNCATE %s' % table)
 
         rows = {
-           str(c) : str(i) for i, c in
-           enumerate(string.ascii_lowercase)
+            str(c): str(i) for i, c in
+            enumerate(string.ascii_lowercase)
         }
 
         for k, v in rows.items():
             self.session.execute(
-                'INSERT INTO ' + table + ' (key, value) values (%s, %s)', (k, v)
+                'INSERT INTO ' + table +
+                ' (key, value) values (%s, %s)', (k, v)
             )
 
         rdd = self.sc.parallelize(rows.items())
@@ -493,10 +509,10 @@ class JoinRDDTest(SimpleTypesTestBase):
 
         tbl = rdd.joinWithCassandraTable(self.keyspace, table)
         joined = tbl.on('key').select('key', 'value').cache()
-        self.assertEqual(dict(joined.keys().collect()), dict(joined.values().collect()))
+        self.assertEqual(dict(joined.keys().collect()),
+                         dict(joined.values().collect()))
         for (k, v) in joined.collect():
             self.assertEqual(k, v)
-
 
     def test_composite_pk(self):
         table = 'join_rdd_test_composite_pk'
@@ -510,51 +526,54 @@ class JoinRDDTest(SimpleTypesTestBase):
         self.session.execute('TRUNCATE %s' % table)
 
         rows = [
-           # (pk, cc, pk + '-' + cc)
-           (unicode(pk), unicode(cc), unicode(pk + '-' + cc))
-           for pk in string.ascii_lowercase[:3]
-           for cc in (str(i) for i in range(3))
+            # (pk, cc, pk + '-' + cc)
+            (unicode(pk), unicode(cc), unicode(pk + '-' + cc))
+            for pk in string.ascii_lowercase[:3]
+            for cc in (str(i) for i in range(3))
         ]
 
         for row in rows:
             self.session.execute(
-                'INSERT INTO ' + table + ' (pk, cc, value) values (%s, %s, %s)', row
+                'INSERT INTO ' + table +
+                ' (pk, cc, value) values (%s, %s, %s)',
+                row
             )
 
         rdd = self.sc.parallelize(rows)
 
-        joined = rdd.joinWithCassandraTable(self.keyspace, table).on('pk', 'cc')
-        self.assertEqual(sorted(zip(rows, rows)), sorted(joined.map(tuple).collect()))
+        joined = rdd.joinWithCassandraTable(
+            self.keyspace, table).on('pk', 'cc')
+        self.assertEqual(sorted(zip(rows, rows)),
+                         sorted(joined.map(tuple).collect()))
 
         joined = rdd.joinWithCassandraTable(self.keyspace, table).on('pk')
         self.assertEqual(len(rows) * sqrt(len(rows)), joined.count())
-
 
         # TODO test
         # .where()
         # .limit()
 
 
-
-
 class JoinDStreamTest(StreamingTest):
     def setUp(self):
         super(JoinDStreamTest, self).setUp()
-        self.joined_rows = self.sc.accumulator([], accum_param=AddingAccumulatorParam([]))
+        self.joined_rows = self.sc.accumulator(
+            [], accum_param=AddingAccumulatorParam([]))
 
     def checkRDD(self, time, rdd):
         self.joined_rows += rdd.collect()
 
     def test(self):
         rows = list(chain(*self.rows))
-        rows_by_key = {row['key'] : row for row in rows}
+        rows_by_key = {row['key']: row for row in rows}
 
         self.sc \
             .parallelize(rows) \
             .saveToCassandra(self.keyspace, self.table)
 
         self.stream \
-            .joinWithCassandraTable(self.keyspace, self.table, ['text'], ['key']) \
+            .joinWithCassandraTable(self.keyspace, self.table, ['text'],
+                                    ['key']) \
             .foreachRDD(self.checkRDD)
 
         self.ssc.start()
@@ -574,7 +593,6 @@ class JoinDStreamTest(StreamingTest):
 
 
 class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
-
     size = 10
     interval = .1
 
@@ -582,7 +600,8 @@ class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
         super(DeleteFromCassandraStreamingTest, self).setUp()
         self.ssc = StreamingContext(self.sc, self.interval)
 
-        self.rdds = [self.sc.parallelize(range(0, self.size)).map(lambda i: {'key':i, 'int':i, 'text': i})]
+        self.rdds = [self.sc.parallelize(range(0, self.size)).map(
+            lambda i: {'key': i, 'int': i, 'text': i})]
         data = self.rdds[0]
         data.saveToCassandra(self.keyspace, self.table)
 
@@ -599,9 +618,9 @@ class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
         self.stream = self.ssc.queueStream(self.rdds)
 
     def test_delete_single_column(self):
-
-        self.stream\
-            .deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text'])
+        self.stream \
+            .deleteFromCassandra(self.keyspace, self.table,
+                                 deleteColumns=['text'])
 
         self.ssc.start()
         self.ssc.awaitTermination((self.size + 1) * self.interval)
@@ -616,9 +635,9 @@ class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
         self.assertIsNone(row.text)
 
     def test_delete_2_columns(self):
-
         self.stream \
-            .deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text', 'int'])
+            .deleteFromCassandra(self.keyspace, self.table,
+                                 deleteColumns=['text', 'int'])
 
         self.ssc.start()
         self.ssc.awaitTermination((self.size + 1) * self.interval)
@@ -633,7 +652,6 @@ class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
         self.assertIsNone(row.text)
 
     def test_delete_all_rows_default(self):
-
         self.stream \
             .deleteFromCassandra(self.keyspace, self.table)
 
@@ -645,7 +663,6 @@ class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
         self.assertEqual(len(data.collect()), 0)
 
     def test_delete_all_rows_explicit(self):
-
         self.stream \
             .deleteFromCassandra(self.keyspace, self.table, keyColumns=['key'])
 
@@ -658,12 +675,12 @@ class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
 
 
 class DeleteFromCassandraTest(SimpleTypesTestBase):
-
     size = 1000
 
     def setUp(self):
         super(DeleteFromCassandraTest, self).setUp()
-        data = self.sc.parallelize(range(0, self.size)).map(lambda i: {'key':i, 'int':i, 'text': i})
+        data = self.sc.parallelize(range(0, self.size)).map(
+            lambda i: {'key': i, 'int': i, 'text': i})
         data.saveToCassandra(self.keyspace, self.table)
 
     def test_delete_selected_cols_seq(self):
@@ -678,7 +695,8 @@ class DeleteFromCassandraTest(SimpleTypesTestBase):
         self.assertEqual(row.int, 0)
 
         # delete content in the text table only.
-        data.deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text'])
+        data.deleteFromCassandra(self.keyspace, self.table,
+                                 deleteColumns=['text'])
 
         # verify the RDD length did not change.
         self.assertEqual(len(data.collect()), self.size)
@@ -689,7 +707,8 @@ class DeleteFromCassandraTest(SimpleTypesTestBase):
         self.assertEqual(row.int, 0)
 
         # delete content in the `int` column.
-        data.deleteFromCassandra(self.keyspace, self.table, deleteColumns=['int'])
+        data.deleteFromCassandra(self.keyspace, self.table,
+                                 deleteColumns=['int'])
 
         # verify the RDD length did not change.
         self.assertEqual(len(data.collect()), self.size)
@@ -717,7 +736,8 @@ class DeleteFromCassandraTest(SimpleTypesTestBase):
         self.assertEqual(row.int, 0)
 
         # delete content in the text table only.
-        data.deleteFromCassandra(self.keyspace, self.table, deleteColumns=['text', 'int'])
+        data.deleteFromCassandra(self.keyspace, self.table,
+                                 deleteColumns=['text', 'int'])
 
         # verify the RDD length did not change.
         self.assertEqual(len(data.collect()), self.size)
@@ -789,7 +809,8 @@ class RegressionTest(CassandraTestCase):
 
         res = ([0.0, 1.0, 2.0], [12.0, 3.0, 0.0], 0.0)
         rdd = self.sc.parallelize([res])
-        rdd.saveToCassandra(self.keyspace, 'test_64', columns=['pos', 'pdf', 'delay'])
+        rdd.saveToCassandra(self.keyspace, 'test_64',
+                            columns=['pos', 'pdf', 'delay'])
 
         row = self.rdd(table='test_64').first()
         self.assertEqual(row.pos, res[0])
@@ -805,18 +826,18 @@ class RegressionTest(CassandraTestCase):
         ''')
         self.session.execute('''TRUNCATE test_89''')
 
-        self.sc.parallelize([dict(id='a', val='b')]).saveToCassandra(self.keyspace, 'test_89')
-        joined = (self.sc
-            .parallelize([dict(id='a', uuid=UUID('27776620-e46e-11e5-a837-0800200c9a66'))])
-            .joinWithCassandraTable(self.keyspace, 'test_89')
-            .collect()
-        )
+        self.sc.parallelize([dict(id='a', val='b')]).saveToCassandra(
+            self.keyspace, 'test_89')
+        joined = (self.sc.parallelize([dict(id='a', uuid=UUID(
+            '27776620-e46e-11e5-a837-0800200c9a66'))]).joinWithCassandraTable(
+            self.keyspace, 'test_89').collect())
 
         self.assertEqual(len(joined), 1)
         self.assertEqual(len(joined[0]), 2)
         left, right = joined[0]
         self.assertEqual(left['id'], 'a')
-        self.assertEqual(left['uuid'], UUID('27776620-e46e-11e5-a837-0800200c9a66'))
+        self.assertEqual(left['uuid'],
+                         UUID('27776620-e46e-11e5-a837-0800200c9a66'))
         self.assertEqual(right['id'], 'a')
         self.assertEqual(right['val'], 'b')
 
@@ -835,23 +856,19 @@ class RegressionTest(CassandraTestCase):
         ''')
 
         self.sc.parallelize([
-            Row(name=str(i), data_final=bytearray(str(i)), data_inter=bytearray(str(i)),
+            Row(name=str(i), data_final=bytearray(str(i)),
+                data_inter=bytearray(str(i)),
                 family_label=str(i), rand=i / 10, source=str(i), score=i * 10)
             for i in range(4)
         ]).saveToCassandra(self.keyspace, 'test_93')
 
-        joined = (self.sc
-            .parallelize([
-                Row(name='1', score=0.4),
-                Row(name='2', score=0.5),
-            ])
-            .joinWithCassandraTable(self.keyspace, 'test_93')
-            .on('name').collect()
-        )
+        joined = (self.sc.parallelize([
+            Row(name='1', score=0.4),
+            Row(name='2', score=0.5),
+        ]).joinWithCassandraTable(self.keyspace, 'test_93').on(
+            'name').collect())
 
         self.assertEqual(len(joined), 2)
-
-
 
 
 if __name__ == '__main__':
@@ -859,13 +876,14 @@ if __name__ == '__main__':
         # connect to cassandra and create a keyspace for testing
         CassandraTestCase.session = Cluster().connect()
         CassandraTestCase.session.execute('''
-            CREATE KEYSPACE IF NOT EXISTS %s
-            WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+            CREATE KEYSPACE IF NOT EXISTS %s WITH
+            replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
         ''' % (CassandraTestCase.keyspace,))
         CassandraTestCase.session.set_keyspace(CassandraTestCase.keyspace)
 
         # create a cassandra spark context
-        CassandraTestCase.sc = CassandraSparkContext(conf=SparkConf().setAppName("PySpark Cassandra Test"))
+        CassandraTestCase.sc = CassandraSparkContext(
+            conf=SparkConf().setAppName("PySpark Cassandra Test"))
 
         # perform the unit tests
         unittest.main()
@@ -878,4 +896,3 @@ if __name__ == '__main__':
             CassandraTestCase.sc.stop()
         if hasattr(CassandraTestCase, 'session'):
             CassandraTestCase.session.shutdown()
-

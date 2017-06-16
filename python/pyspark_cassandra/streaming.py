@@ -10,15 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pyspark_cassandra.util import as_java_object, as_java_array
-
-from pyspark.streaming.dstream import DStream
-from pyspark_cassandra.conf import WriteConf
-from pyspark_cassandra.util import helper
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
+from pyspark.streaming.dstream import DStream
+
+from pyspark_cassandra.conf import WriteConf
+from pyspark_cassandra.util import as_java_object, as_java_array
+from pyspark_cassandra.util import helper
 
 
-def saveToCassandra(dstream, keyspace, table, columns=None, row_format=None, keyed=None,
+def saveToCassandra(dstream, keyspace, table, columns=None, row_format=None,
+                    keyed=None,
                     write_conf=None, **write_conf_kwargs):
     ctx = dstream._ssc._sc
     gw = ctx._gateway
@@ -29,37 +30,44 @@ def saveToCassandra(dstream, keyspace, table, columns=None, row_format=None, key
     # convert the columns to a string array
     columns = as_java_array(gw, "String", columns) if columns else None
 
-    return helper(ctx).saveToCassandra(dstream._jdstream, keyspace, table, columns, row_format,
+    return helper(ctx).saveToCassandra(dstream._jdstream, keyspace, table,
+                                       columns, row_format,
                                        keyed, write_conf)
 
-def deleteFromCassandra(dstream, keyspace=None, table=None, deleteColumns=None, keyColumns=None,
+
+def deleteFromCassandra(dstream, keyspace=None, table=None, deleteColumns=None,
+                        keyColumns=None,
                         row_format=None, keyed=None, write_conf=None,
                         **write_conf_kwargs):
-    """Delete data from Cassandra table, using data from the RDD as primary keys. Uses the specified column names.
+    """Delete data from Cassandra table, using data from the RDD as primary
+    keys. Uses the specified column names.
 
     Arguments:
        @param dstream(DStream)
-        The DStream to join. Equals to self when invoking joinWithCassandraTable on a monkey
-        patched RDD.
+        The DStream to join. Equals to self when invoking
+        joinWithCassandraTable on a monkey patched RDD.
         @param keyspace(string):in
-            The keyspace to save the RDD in. If not given and the rdd is a CassandraRDD the same
-            keyspace is used.
+            The keyspace to save the RDD in. If not given and the rdd is a
+            CassandraRDD the same keyspace is used.
         @param table(string):
-            The CQL table to save the RDD in. If not given and the rdd is a CassandraRDD the same
-            table is used.
+            The CQL table to save the RDD in. If not given and the rdd is a
+            CassandraRDD the same table is used.
 
         Keyword arguments:
         @param deleteColumns(iterable):
-            The list of column names to delete, empty ColumnSelector means full row.
+            The list of column names to delete, empty ColumnSelector means full
+            row.
 
         @param keyColumns(iterable):
-            The list of column names to delete, empty ColumnSelector means full row.
+            The list of column names to delete, empty ColumnSelector means full
+            row.
 
         @param row_format(RowFormat):
-            Primary key columns selector, Optional. All RDD primary columns columns will be checked by default
+            Primary key columns selector, Optional. All RDD primary columns
+            columns will be checked by default
         @param keyed(bool):
-            Make explicit that the RDD consists of key, value tuples (and not arrays of length
-            two).
+            Make explicit that the RDD consists of key, value tuples (and not
+            arrays of length two).
 
         @param write_conf(WriteConf):
             A WriteConf object to use when saving to Cassandra
@@ -74,20 +82,25 @@ def deleteFromCassandra(dstream, keyspace=None, table=None, deleteColumns=None, 
     write_conf = WriteConf.build(write_conf, **write_conf_kwargs)
     write_conf = as_java_object(gw, write_conf.settings())
     # convert the columns to a string array
-    deleteColumns = as_java_array(gw, "String", deleteColumns) if deleteColumns else None
-    keyColumns = as_java_array(gw, "String", keyColumns) if keyColumns else None
+    deleteColumns = as_java_array(gw, "String",
+                                  deleteColumns) if deleteColumns else None
+    keyColumns = as_java_array(gw, "String", keyColumns) \
+        if keyColumns else None
 
     return helper(ctx).deleteFromCassandra(dstream._jdstream, keyspace, table,
-                                           deleteColumns, keyColumns, row_format,
+                                           deleteColumns, keyColumns,
+                                           row_format,
                                            keyed, write_conf)
 
-def joinWithCassandraTable(dstream, keyspace, table, selected_columns=None, join_columns=None):
+
+def joinWithCassandraTable(dstream, keyspace, table, selected_columns=None,
+                           join_columns=None):
     """Joins a DStream (a stream of RDDs) with a Cassandra table
 
     Arguments:
         @param dstream(DStream)
-        The DStream to join. Equals to self when invoking joinWithCassandraTable on a monkey
-        patched RDD.
+        The DStream to join. Equals to self when invoking
+        joinWithCassandraTable on a monkey patched RDD.
         @param keyspace(string):
             The keyspace to join on.
         @param table(string):
@@ -102,11 +115,14 @@ def joinWithCassandraTable(dstream, keyspace, table, selected_columns=None, join
     ctx = ssc._sc
     gw = ctx._gateway
 
-    selected_columns = as_java_array(gw, "String", selected_columns) if selected_columns else None
-    join_columns = as_java_array(gw, "String", join_columns) if join_columns else None
+    selected_columns = as_java_array(
+        gw, "String", selected_columns) if selected_columns else None
+    join_columns = as_java_array(gw, "String",
+                                 join_columns) if join_columns else None
 
     h = helper(ctx)
-    dstream = h.joinWithCassandraTable(dstream._jdstream, keyspace, table, selected_columns,
+    dstream = h.joinWithCassandraTable(dstream._jdstream, keyspace, table,
+                                       selected_columns,
                                        join_columns)
     dstream = h.pickleRows(dstream)
     dstream = h.javaDStream(dstream)
@@ -114,8 +130,8 @@ def joinWithCassandraTable(dstream, keyspace, table, selected_columns=None, join
     return DStream(dstream, ssc, AutoBatchedSerializer(PickleSerializer()))
 
 
-# Monkey patch the default python DStream so that data in it can be stored to and joined with
-# Cassandra tables
+# Monkey patch the default python DStream so that data in it can be stored to
+# and joined with Cassandra tables
 DStream.saveToCassandra = saveToCassandra
 DStream.joinWithCassandraTable = joinWithCassandraTable
 DStream.deleteFromCassandra = deleteFromCassandra

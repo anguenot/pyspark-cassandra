@@ -26,7 +26,7 @@ class _Conf(object):
             return cls(**kwargs)
 
     def settings(self):
-        return {k:v for k, v in self.__dict__.items() if v is not None}
+        return {k: v for k, v in self.__dict__.items() if v is not None}
 
     def __str__(self):
         return '%s(%s)' % (
@@ -36,11 +36,12 @@ class _Conf(object):
 
 
 class ReadConf(_Conf):
-    def __init__(self, split_count=None, split_size=None, fetch_size=None, consistency_level=None,
+    def __init__(self, split_count=None, split_size=None, fetch_size=None,
+                 consistency_level=None,
                  metrics_enabled=None):
-        '''
+        """
             TODO docstring
-        '''
+        """
         self.split_count = split_count
         self.split_size = split_size
         self.fetch_size = fetch_size
@@ -49,12 +50,15 @@ class ReadConf(_Conf):
 
 
 class WriteConf(_Conf):
-    def __init__(self, batch_size=None, batch_buffer_size=None, batch_grouping_key=None,
-                 consistency_level=None, parallelism_level=None, throughput_mibps=None, ttl=None,
+    def __init__(self, batch_size=None, batch_buffer_size=None,
+                 batch_grouping_key=None,
+                 consistency_level=None, parallelism_level=None,
+                 throughput_mibps=None, ttl=None,
                  timestamp=None, metrics_enabled=None):
-        '''
+        """
             @param batch_size(int):
-                The size in bytes to batch up in an unlogged batch of CQL inserts.
+                The size in bytes to batch up in an unlogged batch of CQL
+                inserts.
                 If None given the default size of 16*1024 is used or
                 spark.cassandra.output.batch.size.bytes if set.
             @param batch_buffer_size(int):
@@ -68,20 +72,23 @@ class WriteConf(_Conf):
                 * None: defaults to "partition"
             @param consistency_level(cassandra.ConsistencyLevel):
                 The consistency level used in writing to Cassandra.
-                If None defaults to LOCAL_ONE or spark.cassandra.output.consistency.level if set.
+                If None defaults to LOCAL_ONE or
+                spark.cassandra.output.consistency.level if set.
             @param parallelism_level(int):
                 The maximum number of batches written in parallel.
-                If None defaults to 8 or spark.cassandra.output.concurrent.writes if set.
+                If None defaults to 8 or
+                spark.cassandra.output.concurrent.writes if set.
             @param throughput_mibps(int):
             @param ttl(int or timedelta):
                 The time to live as seconds or timedelta to use for the values.
                 If None given no TTL is used.
             @param timestamp(int, date or datetime):
-                The timestamp in microseconds, date or datetime to use for the values.
+                The timestamp in microseconds, date or datetime to use for the
+                values.
                 If None given the Cassandra nodes determine the timestamp.
             @param metrics_enabled(bool):
                 Whether to enable task metrics updates.
-        '''
+        """
         self.batch_size = batch_size
         self.batch_buffer_size = batch_buffer_size
         self.batch_grouping_key = batch_grouping_key
@@ -94,9 +101,13 @@ class WriteConf(_Conf):
             ttl = int(ttl.total_seconds())
         self.ttl = ttl
 
-        # convert date or datetime objects to a timestamp in milliseconds since the UNIX epoch
-        if timestamp and (isinstance(timestamp, datetime) or isinstance(timestamp, date)):
-            timestamp = (timestamp - timestamp.__class__(1970, 1, 1)).total_seconds()
+        # convert date or datetime objects to a timestamp in milliseconds since
+        # the UNIX epoch
+        if timestamp and \
+                (isinstance(
+                    timestamp, datetime) or isinstance(timestamp, date)):
+            timestamp = (
+                timestamp - timestamp.__class__(1970, 1, 1)).total_seconds()
             timestamp = int(timestamp * 1000 * 1000)
         self.timestamp = timestamp
 

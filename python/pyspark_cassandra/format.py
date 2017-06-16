@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 class RowFormat(object):
     """An enumeration of CQL row formats used in Cassandra RDD's"""
 
@@ -20,14 +21,17 @@ class RowFormat(object):
     values = (DICT, TUPLE, ROW)
 
     def __init__(self):
-        raise NotImplemented('RowFormat is not meant to be initialized, use e.g. RowFormat.DICT')
+        raise NotImplemented(
+            "RowFormat is not meant to be initialized, use e.g. "
+            "RowFormat.DICT")
 
 
 class ColumnSelector(object):
     def __init__(self, partition_key=False, primary_key=False, *columns):
         if sum([bool(partition_key), bool(primary_key), bool(columns)]) > 1:
             raise ValueError(
-                "can't combine selection of partition_key and/or primar_key and/or columns")
+                "can't combine selection of partition_key "
+                "and/or primary_key and/or columns")
 
         self.partition_key = partition_key
         self.primary_key = primary_key
