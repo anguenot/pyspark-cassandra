@@ -29,10 +29,16 @@ assemblyOption in assembly := (assemblyOption in assembly).value.copy(
   includeScala = false
 )
 
-EclipseKeys.withSource := true
-
 spIgnoreProvided := true
 
 ivyScala := ivyScala.value map {
   _.copy(overrideScalaVersion = true)
+}
+
+assemblyMergeStrategy in assembly <<= (assemblyMergeStrategy in assembly) {
+  (old) => {
+    case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+    case PathList("META-INF", xs@_*) => MergeStrategy.last
+    case x => MergeStrategy.last
+  }
 }
