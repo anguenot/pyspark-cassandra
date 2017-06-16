@@ -11,7 +11,6 @@
 # limitations under the License.
 
 
-
 from collections import Set, Iterable, Mapping
 from datetime import datetime
 from time import mktime
@@ -20,7 +19,8 @@ from pyspark_cassandra.types import UDT
 
 
 def as_java_array(gateway, java_type, iterable):
-    """Creates a Java array from a Python iterable, using the given p4yj gateway"""
+    """Creates a Java array from a Python iterable, using the given p4yj
+    gateway"""
 
     if iterable is None:
         return None
@@ -38,9 +38,9 @@ def as_java_array(gateway, java_type, iterable):
 
 def as_java_object(gateway, obj):
     """
-        Converts a limited set of types to their corresponding types in java. Supported are
-        'primitives' (which aren't converted), datetime.datetime and the set-, dict- and
-        iterable-like types.
+        Converts a limited set of types to their corresponding types in java.
+        Supported are 'primitives' (which aren't converted), datetime.datetime
+        and the set-, dict- and iterable-like types.
     """
 
     if obj is None:
@@ -63,17 +63,20 @@ def as_java_object(gateway, obj):
 
     elif issubclass(t, (dict, Mapping)):
         hash_map = gateway.jvm.java.util.HashMap()
-        for (k, v) in obj.items(): hash_map[k] = v
+        for (k, v) in obj.items():
+            hash_map[k] = v
         return hash_map
 
     elif issubclass(t, (set, Set)):
         hash_set = gateway.jvm.java.util.HashSet()
-        for e in obj: hash_set.add(e)
+        for e in obj:
+            hash_set.add(e)
         return hash_set
 
     elif issubclass(t, (list, Iterable)):
         array_list = gateway.jvm.java.util.ArrayList()
-        for e in obj: array_list.append(e)
+        for e in obj:
+            array_list.append(e)
         return array_list
 
     else:
@@ -82,14 +85,17 @@ def as_java_object(gateway, obj):
 
 def load_class(ctx, name):
     return ctx._jvm.java.lang.Thread.currentThread().getContextClassLoader() \
-            .loadClass(name)
+        .loadClass(name)
+
 
 _helper = None
+
 
 def helper(ctx):
     global _helper
 
     if not _helper:
-        _helper = load_class(ctx, "pyspark_cassandra.PythonHelper").newInstance()
+        _helper = load_class(ctx,
+                             "pyspark_cassandra.PythonHelper").newInstance()
 
     return _helper

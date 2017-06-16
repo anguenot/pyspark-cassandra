@@ -17,7 +17,7 @@ clean-dist:
 	rm -rf target
 	rm -rf python/build/
 	rm -rf python/*.egg-info
-
+	rm -rf python/.tox
 
 
 install-venv:
@@ -99,7 +99,7 @@ dist: clean-pyc
 		zip ../target/scala-2.11/pyspark-cassandra-assembly-$(VERSION).jar -@
 
 
-all: clean dist
+all: clean python-tox dist
 
 
 publish: clean
@@ -118,4 +118,7 @@ publish: clean
 
 	# send the package to spark-packages
 	spark-package publish -c ".sp-creds.txt"  -n "anguenot/pyspark-cassandra" -v "$(VERSION)" -f . -z target/pyspark-cassandra-$(VERSION).zip
+
+python-tox: ## check style with flake8
+	cd python && tox
 

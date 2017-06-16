@@ -20,12 +20,14 @@ addons:
     - build-essential
     - python-dev
     - python-pip
+    - python-tox
     - python-virtualenv
     - libev4
     - libev-dev
   
-script: JVM_OPTS= make clean dist start-cassandra test-travis stop-cassandra
+script: JVM_OPTS= make clean python-tox dist start-cassandra test-travis stop-cassandra
 
+dist: trusty
 sudo: false
 
 cache:

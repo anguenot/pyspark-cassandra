@@ -11,24 +11,21 @@
 # limitations under the License.
 
 """
-    This module provides python support for Apache Spark's Resillient Distributed Datasets from
-    Apache Cassandra CQL rows using the Spark Cassandra Connector from
+    This module provides python support for Apache Spark's Resillient
+    Distributed Datasets from Apache Cassandra CQL rows using the Spark
+    Cassandra Connector from:
     https://github.com/datastax/spark-cassandra-connector.
 """
 
 import inspect
 
-import pyspark.context
 import pyspark.rdd
-
-import pyspark_cassandra.context
-import pyspark_cassandra.rdd
 
 from .conf import WriteConf
 from .context import CassandraSparkContext, monkey_patch_sc
 from .rdd import RowFormat
+from .rdd import saveToCassandra, joinWithCassandraTable, deleteFromCassandra
 from .types import Row, UDT
-
 
 __all__ = [
     "CassandraSparkContext",
@@ -40,9 +37,9 @@ __all__ = [
     "WriteConf"
 ]
 
+# Monkey patch the default python RDD so that it can be stored to Cassandra as
+# CQL rows
 
-# Monkey patch the default python RDD so that it can be stored to Cassandra as CQL rows
-from .rdd import saveToCassandra, joinWithCassandraTable, deleteFromCassandra
 pyspark.rdd.RDD.saveToCassandra = saveToCassandra
 pyspark.rdd.RDD.joinWithCassandraTable = joinWithCassandraTable
 pyspark.rdd.RDD.deleteFromCassandra = deleteFromCassandra
