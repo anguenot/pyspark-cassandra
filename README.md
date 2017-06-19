@@ -295,6 +295,16 @@ Or with a DStream:
 joined = dstream.joinWithCassandraTable(self.keyspace, self.table, ['e-mail', 'followers'], ['id'])
 ```
 
+Releasing
+---------
+
+```
+$ pip install bumpversion
+
+$ bumpversion --dry-run --verbose $CURRENT_VERSION --new-version=$NEW_VERSION
+
+$ bumpversion $CURRENT_VERSION --new-version=$NEW_VERSION
+```
 
 Problems / ideas?
 ------------------
