@@ -30,7 +30,7 @@ setup(
     name='pyspark_cassandra',
     maintainer='Julien Anguenot',
     maintainer_email='julien@anguenot.org',
-    version='0.4.0',
+    version='0.5.0',
     description='Utilities to assist in working with Cassandra and PySpark.',
     long_description="",
     url='https://github.com/anguenot/pyspark-cassandra',
