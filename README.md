@@ -304,6 +304,10 @@ $ pip install bumpversion
 $ bumpversion --dry-run --verbose $CURRENT_VERSION --new-version=$NEW_VERSION
 
 $ bumpversion $CURRENT_VERSION --new-version=$NEW_VERSION
+
+$ git push
+
+$ git push --tags origin
 ```
 
 Problems / ideas?
