@@ -29,10 +29,13 @@ class GenericRowWriterFactory(format: Option[Format.Value], keyed: Option[Boolea
 }
 
 class GenericRowWriter(format: Option[Format.Value], keyed: Option[Boolean], columns: IndexedSeq[ColumnRef]) extends RowWriter[Any] {
-  val cNames = columns.map { _.columnName }
+  val cNames = columns.map {
+    _.columnName
+  }
   val idxedCols = cNames.zipWithIndex
 
   def columnNames: Seq[String] = cNames
+
   def indexedColumns = idxedCols
 
   var fmt: Option[(Format.Value, Boolean)] = None

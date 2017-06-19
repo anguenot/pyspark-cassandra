@@ -27,7 +27,9 @@ import scala.collection.JavaConversions._
 object Utils {
   def columnSelector(columns: Array[String], default: ColumnSelector = AllColumns) = {
     if (columns != null && columns.length > 0) {
-      SomeColumns(columns.map { ColumnName(_) }: _*)
+      SomeColumns(columns.map {
+        ColumnName(_)
+      }: _*)
     } else {
       default
     }
@@ -38,7 +40,7 @@ object Utils {
 
     readConf match {
       case Some(rc) =>
-        for { (k, v) <- rc } {
+        for {(k, v) <- rc} {
           (k, v) match {
             case ("split_count", v: Int) => conf = conf.copy(splitCount = Option(v))
             case ("split_size", v: Int) => conf = conf.copy(splitSizeInMB = v)
@@ -60,7 +62,7 @@ object Utils {
 
     writeConf match {
       case Some(wc) =>
-        for { (k, v) <- wc } {
+        for {(k, v) <- wc} {
           (k, v) match {
             case ("batch_size", v: Int) => conf = conf.copy(batchSize = BytesInBatch(v))
             case ("batch_buffer_size", v: Int) => conf = conf.copy(batchGroupingBufferSize = v)

@@ -15,7 +15,7 @@
 package pyspark_util
 
 import java.lang.{Boolean => JBoolean}
-import java.util.{List => JList, Map => JMap}
+import java.util.{List => JList}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Buffer

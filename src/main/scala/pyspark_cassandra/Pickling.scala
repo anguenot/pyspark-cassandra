@@ -46,7 +46,9 @@ class Pickling extends PicklingUtils {
 
 object PlainRowPickler extends StructPickler {
   def creator = "pyspark_cassandra.types\n_create_row\n"
+
   def fields(o: Any) = o.asInstanceOf[Row].fields
+
   def values(o: Any, fields: Seq[_]) = o.asInstanceOf[Row].values
 }
 
@@ -56,7 +58,9 @@ object PlainRowUnpickler extends StructUnpickler {
 
 object UDTValuePickler extends StructPickler {
   def creator = "pyspark_cassandra.types\n_create_udt\n"
+
   def fields(o: Any) = o.asInstanceOf[UDTValue].columnNames
+
   def values(o: Any, fields: Seq[_]) = o.asInstanceOf[UDTValue].columnValues
 }
 
@@ -106,6 +110,10 @@ object DataFramePickler extends IObjectPickler {
 
 object UnpickledUUIDConverter extends TypeConverter[UUID] {
   val tt = typeTag[UUID]
+
   def targetTypeTag = tt
-  def convertPF = { case holder: UUIDHolder => holder.uuid }
+
+  def convertPF = {
+    case holder: UUIDHolder => holder.uuid
+  }
 }
