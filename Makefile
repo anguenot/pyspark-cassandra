@@ -12,6 +12,7 @@ clean-pyc:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
+	find . -name '.tox' -exec rm -fr {} +
 
 clean-dist:
 	rm -rf target
@@ -93,7 +94,7 @@ endef
 
 
 dist: clean-pyc
-	sbt -batch assembly
+	sbt assembly
 	cd python ; \
 		find . -mindepth 2 -name '*.py' -print | \
 		zip ../target/scala-2.11/pyspark-cassandra-assembly-$(VERSION).jar -@
@@ -104,7 +105,7 @@ all: clean python-tox scala-style dist
 
 publish: clean
 	# use spark packages to create the distribution
-	sbt -batch spDist
+	sbt spDist
 
 	# push the python source files into the jar
 	cd python ; \
