@@ -20,8 +20,12 @@ trait FromUnreadRow[T] extends (UnreadRow => T) with Serializable
 // not just here by the way, but all over the place ... this is Scala!
 trait ToKV[KV] extends FromUnreadRow[Array[Any]] {
   def apply(row: UnreadRow): Array[Any] = {
-    val k = transform(row, row.columnNames.intersect(row.table.primaryKey.map { _.columnName }))
-    val v = transform(row, row.columnNames.intersect(row.table.regularColumns.map { _.columnName }))
+    val k = transform(row, row.columnNames.intersect(row.table.primaryKey.map {
+      _.columnName
+    }))
+    val v = transform(row, row.columnNames.intersect(row.table.regularColumns.map {
+      _.columnName
+    }))
     Array(k, v)
   }
 

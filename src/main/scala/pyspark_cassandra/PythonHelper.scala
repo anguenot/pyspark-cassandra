@@ -44,7 +44,9 @@ class PythonHelper() {
   }
 
   def select(rdd: CassandraRDD[UnreadRow], columns: Array[String]) = {
-    rdd.select(columns.map { new ColumnName(_) }: _*)
+    rdd.select(columns.map {
+      new ColumnName(_)
+    }: _*)
   }
 
   def limit(rdd: CassandraRDD[UnreadRow], lim: Long) = {
@@ -72,7 +74,7 @@ class PythonHelper() {
   /* rdds ------------------------------------------------------------------ */
 
   def saveToCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String, columns: Array[String],
-    rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any]) = {
+                      rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any]) = {
 
     val selectedColumns = columnSelector(columns)
     val conf = parseWriteConf(Some(writeConf))
@@ -84,7 +86,7 @@ class PythonHelper() {
   /* dstreams -------------------------------------------------------------- */
 
   def saveToCassandra(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String, columns: Array[String],
-    rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any]) = {
+                      rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any]) = {
 
     val selectedColumns = columnSelector(columns)
     val conf = parseWriteConf(Some(writeConf))
@@ -112,7 +114,7 @@ class PythonHelper() {
   /* dstreams -------------------------------------------------------------- */
 
   def joinWithCassandraTable(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String,
-    selectedColumns: Array[String], joinColumns: Array[String]): DStream[(Any, UnreadRow)] = {
+                             selectedColumns: Array[String], joinColumns: Array[String]): DStream[(Any, UnreadRow)] = {
     val columns = columnSelector(selectedColumns)
     val joinOn = columnSelector(joinColumns, PartitionKeyColumns)
     implicit val rwf = new GenericRowWriterFactory(None, None)
@@ -135,7 +137,7 @@ class PythonHelper() {
     val conf = parseWriteConf(Some(writeConf))
     implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
     rdd.rdd.unpickle().deleteFromCassandra(keyspace, table, deletes, keys, conf)
-    }
+  }
 
   /* dstreams ------------------------------------------------------------------ */
 

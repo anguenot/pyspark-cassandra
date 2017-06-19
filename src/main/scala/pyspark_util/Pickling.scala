@@ -19,7 +19,7 @@ import java.math.BigInteger
 import java.net.{Inet4Address, Inet6Address, InetAddress}
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
-import java.util.{Collection, HashMap, UUID, List => JList, Map => JMap}
+import java.util.{Collection, HashMap, UUID, Map => JMap}
 
 import net.razorvine.pickle._
 import org.apache.spark.rdd.RDD
@@ -48,7 +48,9 @@ class Pickling extends Serializable {
   }
 
   implicit def toPickleableRDD(rdd: RDD[_]) = new PicklableRDD(rdd)
+
   implicit def toUnpickleableRDD(rdd: RDD[Array[Byte]]) = new UnpicklableRDD(rdd)
+
   implicit def toUnpickleableStream(dstream: DStream[Array[Byte]]) = new UnpicklableDStream(dstream)
 
   def register() {
@@ -124,7 +126,7 @@ class UnpicklableDStream(dstream: DStream[Array[Byte]]) {
 }
 
 class BatchPickler(batchSize: Int = 1000)(implicit pickling: Pickling)
-    extends (Iterator[_] => Iterator[Array[Byte]])
+  extends (Iterator[_] => Iterator[Array[Byte]])
     with Serializable {
 
   def apply(in: Iterator[_]): Iterator[Array[Byte]] = {
@@ -152,7 +154,9 @@ trait StructPickler extends IObjectPickler {
   }
 
   def creator: String
+
   def fields(o: Any): Seq[_]
+
   def values(o: Any, fields: Seq[_]): Seq[_]
 }
 
@@ -218,12 +222,16 @@ class GatheringByteBufferPickler extends IObjectPickler {
 
     out.write(Opcodes.BINSTRING)
 
-    val length = buffers.map { _.remaining() }.sum
+    val length = buffers.map {
+      _.remaining()
+    }.sum
 
     out.write(PickleUtils.integer_to_bytes(length))
 
     val c = Channels.newChannel(out)
-    buffers.foreach { c.write(_) }
+    buffers.foreach {
+      c.write(_)
+    }
 
     out.write(Opcodes.TUPLE1)
     out.write(Opcodes.REDUCE)

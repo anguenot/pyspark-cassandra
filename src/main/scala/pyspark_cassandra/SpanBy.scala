@@ -63,16 +63,17 @@ object SpanBy {
   }
 
   /**
-   * 'Deserializes' a value of the given type _only if_ there is no binary representation possibly which can
-   * be converted into a numpy array. I.e. longs will _not_ actually be deserialized, but Strings or UUIDs
-   * will. If possible the value will be written out as a binary string for an entire column to be converted
-   * to Numpy arrays.
-   */
+    * 'Deserializes' a value of the given type _only if_ there is no binary representation possibly which can
+    * be converted into a numpy array. I.e. longs will _not_ actually be deserialized, but Strings or UUIDs
+    * will. If possible the value will be written out as a binary string for an entire column to be converted
+    * to Numpy arrays.
+    */
   private def deserialize(row: UnreadRow, dt: DataType, i: Int) = {
-    if (binarySupport(dt))
+    if (binarySupport(dt)) {
       row.row.getBytesUnsafe(i)
-    else
+    } else {
       GettableData.get(row.row, i)
+    }
   }
 
   /** Checks if a Cassandra type can be represented as a binary string. */

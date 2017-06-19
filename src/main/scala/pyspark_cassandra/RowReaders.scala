@@ -31,13 +31,13 @@ case class UnreadRow(row: DriverRow, columnNames: Array[String], table: TableDef
 }
 
 class DeferringRowReader(table: TableDef, selectedColumns: IndexedSeq[ColumnRef])
-    extends RowReader[UnreadRow] {
+  extends RowReader[UnreadRow] {
 
   def targetClass = classOf[UnreadRow]
 
   override def neededColumns: Option[Seq[ColumnRef]] = None // TODO or selected columns?
 
-  override def read(row: DriverRow, rowMetaData: CassandraRowMetadata): UnreadRow =  {
+  override def read(row: DriverRow, rowMetaData: CassandraRowMetadata): UnreadRow = {
     assert(row.getColumnDefinitions().size() >= rowMetaData.columnNames.length, "Not enough columns available in row")
     UnreadRow(row, rowMetaData.columnNames.toArray, table)
   }

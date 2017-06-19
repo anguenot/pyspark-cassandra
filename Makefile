@@ -93,18 +93,18 @@ endef
 
 
 dist: clean-pyc
-	sbt assembly
+	sbt -batch assembly
 	cd python ; \
 		find . -mindepth 2 -name '*.py' -print | \
 		zip ../target/scala-2.11/pyspark-cassandra-assembly-$(VERSION).jar -@
 
 
-all: clean python-tox dist
+all: clean python-tox scala-style dist
 
 
 publish: clean
 	# use spark packages to create the distribution
-	sbt spDist
+	sbt -batch spDist
 
 	# push the python source files into the jar
 	cd python ; \
@@ -119,6 +119,9 @@ publish: clean
 	# send the package to spark-packages
 	spark-package publish -c ".sp-creds.txt"  -n "anguenot/pyspark-cassandra" -v "$(VERSION)" -f . -z target/pyspark-cassandra-$(VERSION).zip
 
+
 python-tox: ## check style with flake8
 	cd python && tox
 
+scala-style: ## check style with scalastyle
+	sbt -batch scalastyle
