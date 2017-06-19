@@ -2,7 +2,7 @@
 CHANGES
 =======
 
-0.4.1 (unreleased)
+0.5.0 (2017-06-19)
 ------------------
 
 * cleanups: build, imports, format etc.

@@ -55,3 +55,7 @@ for _ in range(10):
         break
     else:
         frame = frame.f_back
+
+__author__ = 'Julien Anguenot'
+__email__ = 'julien@anguenot.org'
+__version__ = '0.5.0'
