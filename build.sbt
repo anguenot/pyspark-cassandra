@@ -37,6 +37,7 @@ ivyScala := ivyScala.value map {
 
 assemblyMergeStrategy in assembly <<= (assemblyMergeStrategy in assembly) {
   (old) => {
+    case PathList(".tox") => MergeStrategy.discard
     case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
     case PathList("META-INF", xs@_*) => MergeStrategy.last
     case x => MergeStrategy.last
