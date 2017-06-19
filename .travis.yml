@@ -25,7 +25,7 @@ addons:
     - libev4
     - libev-dev
   
-script: JVM_OPTS= make clean python-tox dist start-cassandra test-travis stop-cassandra
+script: JVM_OPTS= make clean lint dist start-cassandra test-travis stop-cassandra
 
 dist: trusty
 sudo: false

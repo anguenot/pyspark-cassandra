@@ -35,11 +35,10 @@ ivyScala := ivyScala.value map {
   _.copy(overrideScalaVersion = true)
 }
 
-assemblyMergeStrategy in assembly <<= (assemblyMergeStrategy in assembly) {
-  (old) => {
-    case PathList(".tox") => MergeStrategy.discard
-    case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
-    case PathList("META-INF", xs@_*) => MergeStrategy.last
-    case x => MergeStrategy.last
-  }
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
+  case PathList("META-INF", xs@_*) => MergeStrategy.last
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
 }

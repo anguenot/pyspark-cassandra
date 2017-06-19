@@ -23,3 +23,4 @@ metastore_db
 .idea
 pyspark-cassandra.iml
 src/main/scala/scala.iml
+/.tox/

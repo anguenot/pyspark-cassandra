@@ -1,5 +1,6 @@
 SHELL = /bin/bash
 VERSION = $(shell cat version.txt)
+SCALA_TARGET_VERSION=2.11
 
 .PHONY: clean clean-pyc clean-dist dist test-travis
 
@@ -12,13 +13,12 @@ clean-pyc:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
-	find . -name '.tox' -exec rm -fr {} +
 
 clean-dist:
 	rm -rf target
 	rm -rf python/build/
 	rm -rf python/*.egg-info
-	rm -rf python/.tox
+	rm -rf .tox
 
 
 install-venv:
@@ -84,8 +84,8 @@ define test-integration-for-version
 			--master local[*] \
 			--driver-memory 512m \
 			--conf spark.cassandra.connection.host="localhost" \
-			--jars target/scala-2.11/pyspark-cassandra-assembly-$(VERSION).jar \
-			--py-files target/scala-2.11/pyspark-cassandra-assembly-$(VERSION).jar \
+			--jars target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra-assembly-$(VERSION).jar \
+			--py-files target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra-assembly-$(VERSION).jar \
 			python/pyspark_cassandra/tests.py
 			
 	echo ======================================================================
@@ -94,35 +94,36 @@ endef
 
 
 dist: clean-pyc
-	sbt assembly
+	sbt -batch assembly
 	cd python ; \
 		find . -mindepth 2 -name '*.py' -print | \
-		zip ../target/scala-2.11/pyspark-cassandra-assembly-$(VERSION).jar -@
+		zip ../target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra-assembly-$(VERSION).jar -@
 
 
-all: clean python-tox scala-style dist
+all: clean lint dist
 
 
 publish: clean
 	# use spark packages to create the distribution
-	sbt spDist
+	sbt -batch spDist
 
 	# push the python source files into the jar
 	cd python ; \
 		find . -mindepth 2 -name '*.py' -print | \
-		zip ../target/scala-2.11/pyspark-cassandra_2.11-$(VERSION).jar -@
+		zip ../target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra_$(SCALA_TARGET_VERSION)-$(VERSION).jar -@
 
 	# copy it to the right name, and update the jar in the zip
-	cp target/scala-2.11/pyspark-cassandra{_2.11,}-$(VERSION).jar
-	cd target/scala-2.11 ;\
+	cp target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra{_$(SCALA_TARGET_VERSION),}-$(VERSION).jar
+	cd target/scala-$(SCALA_TARGET_VERSION) ;\
 		zip ../pyspark-cassandra-$(VERSION).zip pyspark-cassandra-$(VERSION).jar
 
 	# send the package to spark-packages
 	spark-package publish -c ".sp-creds.txt"  -n "anguenot/pyspark-cassandra" -v "$(VERSION)" -f . -z target/pyspark-cassandra-$(VERSION).zip
 
+lint: python-tox scala-style
 
 python-tox: ## check style with flake8
-	cd python && tox
+	tox
 
 scala-style: ## check style with scalastyle
 	sbt -batch scalastyle
