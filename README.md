@@ -156,7 +156,7 @@ This type is structurally identical to pyspark_cassandra.Row but serves user def
 
 ### pyspark_cassandra.CassandraSparkContext
 
-A `CassandraSparkContext` is very similar to a regular `SparkContext`. It is created in the same way, can be used to read files, parallelize local data, broadcast a variable, etc. See the [Spark Programming Guide](https://spark.apache.org/docs/1.2.0/programming-guide.html) for more details. *But* it exposes one additional method:
+A `CassandraSparkContext` is very similar to a regular `SparkContext`. It is created in the same way, can be used to read files, parallelize local data, broadcast a variable, etc. See the [Spark Programming Guide](https://spark.apache.org/docs/latest/programming-guide.html) for more details. *But* it exposes one additional method:
 
 * ``cassandraTable(keyspace, table, ...)``:	Returns a CassandraRDD for the given keyspace and table. Additional arguments which can be provided:
 
