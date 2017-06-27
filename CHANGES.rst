@@ -5,7 +5,7 @@ CHANGES
 0.6.0 (unreleased)
 ------------------
 
-  *
+* Integration tests running against C* 2.1.18, 2.2.9 and 3.0.14
 
 0.5.0 (2017-06-19)
 ------------------
