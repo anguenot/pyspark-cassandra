@@ -2,6 +2,7 @@ PySpark Cassandra
 =================
 
 [![Build Status](https://travis-ci.org/anguenot/pyspark-cassandra.svg)](https://travis-ci.org/anguenot/pyspark-cassandra)
+[![APACHE2 License](https://img.shields.io/badge/license-Apache2.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 
 PySpark Cassandra brings back the fun in working with Cassandra data in PySpark.
 
