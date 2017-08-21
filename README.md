@@ -1,14 +1,23 @@
 PySpark Cassandra
 =================
 
-[![Build Status](https://travis-ci.org/anguenot/pyspark-cassandra.svg)](https://travis-ci.org/anguenot/pyspark-cassandra)
-[![APACHE2 License](https://img.shields.io/badge/license-Apache2.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
+[![Build
+Status](https://travis-ci.org/anguenot/pyspark-cassandra.svg)](https://travis-ci.org/anguenot/pyspark-cassandra)
+[![APACHE2
+License](https://img.shields.io/badge/license-Apache2.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 
-PySpark Cassandra brings back the fun in working with Cassandra data in PySpark.
+`pyspark-cassandra` is a Python port of the awesome [DataStax Cassandra
+Connector](https://github.com/datastax/spark-cassandra-connector).
 
-This module provides python support for Apache Spark's Resillient Distributed Datasets from Apache Cassandra CQL rows using [Cassandra Spark Connector](https://github.com/datastax/spark-cassandra-connector) within PySpark, both in the interactive shell and in python programmes submitted with spark-submit.
+This module provides Python support for Apache Spark's Resilient Distributed
+Datasets from Apache Cassandra CQL rows using [Cassandra Spark
+Connector](https://github.com/datastax/spark-cassandra-connector) within
+PySpark, both in the interactive shell and in Python programmes submitted with
+spark-submit.
 
-This project was initially forked from https://github.com/TargetHolding/pyspark-cassandra because this project is no longer maintained.
+This project was initially forked from
+[@TargetHolding](https://github.com/TargetHolding/pyspark-cassandra) since they
+no longer maintain it.
 
 **Contents:**
 * [Compatibility](#compatibility)
@@ -21,20 +30,22 @@ This project was initially forked from https://github.com/TargetHolding/pyspark-
 * [Contributing](#contributing)
 
 
-
 Compatibility
 -------------
 Feedback on (in-)compatibility is much appreciated.
 
 ### Spark
-The current version of PySpark Cassandra is successfully used with Spark version 2.0.x, 2.1x and 2.2.x.
-Use older versions for Spark 1.5, 1.6: https://github.com/TargetHolding/pyspark-cassandra
+The current version of PySpark Cassandra is successfully used with Spark version
+2.0.x, 2.1x and 2.2.x. Use [older
+versions](https://github.com/TargetHolding/pyspark-cassandra) for Spark 1.5,
+1.6.
 
 ### Cassandra
 PySpark Cassandra is compatible with Cassandra:
 * 2.1.5*
 * 2.2.x
 * 3.0.x
+* 3.11.x
 
 ### Python
 PySpark Cassandra is used with python 2.7, python 3.4+
@@ -42,13 +53,13 @@ PySpark Cassandra is used with python 2.7, python 3.4+
 ### Scala
 PySpark Cassandra is currently only packaged for Scala 2.11
 
-
-
 Using with PySpark
 ------------------
 
 ### With Spark Packages
-Pyspark Cassandra is published at [Spark Packages](http://spark-packages.org/package/anguenot/pyspark-cassandra). This allows easy usage with Spark through:
+Pyspark Cassandra is published at [Spark
+Packages](http://spark-packages.org/package/anguenot/pyspark-cassandra). This
+allows easy usage with Spark through:
 ```bash
 spark-submit \
 	--packages anguenot/pyspark-cassandra:<version> \
@@ -66,13 +77,17 @@ spark-submit \
 	--master spark://spark-master:7077 \
 	yourscript.py
 ```
-(also not that the assembly will include the python source files, quite similar to a python source distribution)
+(also not that the assembly will include the python source files, quite similar 
+to a python source distribution)
 
 
 Using with PySpark shell
 ------------------------
 
-Replace `spark-submit` with `pyspark` to start the interactive shell and don't provide a script as argument and then import PySpark Cassandra. Note that when performing this import the `sc` variable in pyspark is augmented with the `cassandraTable(...)` method.
+Replace `spark-submit` with `pyspark` to start the interactive shell and don't 
+provide a script as argument and then import PySpark Cassandra. Note that when 
+performing this import the `sc` variable in pyspark is augmented with 
+the `cassandraTable(...)` method.
 
 ```python
 import pyspark_cassandra
@@ -90,33 +105,44 @@ The package can be published locally with:
 ```bash
 sbt spPublishLocal
 ```
-The package can be published to Spark Packages with (requires authentication and authorization):
+The package can be published to Spark Packages with (requires authentication and
+ authorization):
 ```bash
 make publish
 ```
 
 ### For local testing / without Spark Packages
-A Java / JVM library as well as a python library is required to use PySpark Cassandra. They can be built with:
+A Java / JVM library as well as a python library is required to use PySpark 
+Cassandra. They can be built with:
 
 ```bash
 make dist
 ```
 
-This creates a fat jar with the Spark Cassandra Connector and additional classes for bridging Spark and PySpark for Cassandra data and the .py source files at: `target/scala-2.11/pyspark-cassandra-assembly-<version>.jar`
+This creates a fat jar with the Spark Cassandra Connector and additional classes 
+for bridging Spark and PySpark for Cassandra data and the .py source files at: 
+`target/scala-2.11/pyspark-cassandra-assembly-<version>.jar`
 
 
 
 API
 ---
 
-The PySpark Cassandra API aims to stay close to the Cassandra Spark Connector API. Reading its [documentation](https://github.com/datastax/spark-cassandra-connector/#documentation) is a good place to start.
+The PySpark Cassandra API aims to stay close to the Cassandra Spark Connector
+API. Reading its
+[documentation](https://github.com/datastax/spark-cassandra-connector/#documentation)
+is a good place to start.
 
 
 ### pyspark_cassandra.RowFormat
 
-The primary representation of CQL rows in PySpark Cassandra is the ROW format. However `sc.cassandraTable(...)` supports the `row_format` argument which can be any of the constants from `RowFormat`:
-* `DICT`: The default layout, a CQL row is represented as a python dict with the CQL row columns as keys.
-* `TUPLE`: A CQL row is represented as a python tuple with the values in CQL table column order / the order of the selected columns.
+The primary representation of CQL rows in PySpark Cassandra is the ROW format. 
+However `sc.cassandraTable(...)` supports the `row_format` argument which can be
+ any of the constants from `RowFormat`:
+* `DICT`: The default layout, a CQL row is represented as a python dict with the
+ CQL row columns as keys.
+* `TUPLE`: A CQL row is represented as a python tuple with the values in CQL 
+table column order / the order of the selected columns.
 * `ROW`: A pyspark_cassandra.Row object representing a CQL row.
 
 Column values are related between CQL and python as follows:
@@ -147,19 +173,27 @@ Column values are related between CQL and python as follows:
 
 ### pyspark_cassandra.Row
 
-This is the default type to which CQL rows are mapped. It is directly compatible with `pyspark.sql.Row` but is (correctly) mutable and provides some other improvements.
+This is the default type to which CQL rows are mapped. It is directly compatible
+ with `pyspark.sql.Row` but is (correctly) mutable and provides some other 
+ improvements.
 
 
 ### pyspark_cassandra.UDT
 
-This type is structurally identical to pyspark_cassandra.Row but serves user defined types. Mapping to custom python types (e.g. via CQLEngine) is not yet supported.
+This type is structurally identical to pyspark_cassandra.Row but serves user 
+defined types. Mapping to custom python types (e.g. via CQLEngine) is not yet 
+supported.
  
 
 ### pyspark_cassandra.CassandraSparkContext
 
-A `CassandraSparkContext` is very similar to a regular `SparkContext`. It is created in the same way, can be used to read files, parallelize local data, broadcast a variable, etc. See the [Spark Programming Guide](https://spark.apache.org/docs/latest/programming-guide.html) for more details. *But* it exposes one additional method:
+A `CassandraSparkContext` is very similar to a regular `SparkContext`. It is 
+created in the same way, can be used to read files, parallelize local data, 
+broadcast a variable, etc. See the [Spark Programming Guide](https://spark.apache.org/docs/latest/programming-guide.html) 
+for more details. *But* it exposes one additional method:
 
-* ``cassandraTable(keyspace, table, ...)``:	Returns a CassandraRDD for the given keyspace and table. Additional arguments which can be provided:
+* ``cassandraTable(keyspace, table, ...)``:	Returns a CassandraRDD for the given
+ keyspace and table. Additional arguments which can be provided:
 
   * `row_format` can be set to any of the `pyspark_cassandra.RowFormat` values (defaults to `ROW`)
   * `split_size` sets the size in the number of CQL rows in each partition (defaults to `100000`)
@@ -171,43 +205,70 @@ A `CassandraSparkContext` is very similar to a regular `SparkContext`. It is cre
 
 PySpark Cassandra supports saving arbitrary RDD's to Cassandra using:
 
-* ``rdd.saveToCassandra(keyspace, table, ...)``: Saves an RDD to Cassandra. The RDD is expected to contain dicts with keys mapping to CQL columns. Additional arguments which can be supplied are:
+* ``rdd.saveToCassandra(keyspace, table, ...)``: Saves an RDD to Cassandra. The 
+RDD is expected to contain dicts with keys mapping to CQL columns. Additional 
+arguments which can be supplied are:
 
-  * ``columns(iterable)``: The columns to save, i.e. which keys to take from the dicts in the RDD.
-  * ``batch_size(int)``: The size in bytes to batch up in an unlogged batch of CQL inserts.
-  * ``batch_buffer_size(int)``: The maximum number of batches which are 'pending'.
-  * ``batch_grouping_key(string)``: The way batches are formed (defaults to "partition"):
+  * ``columns(iterable)``: The columns to save, i.e. which keys to take from the
+   dicts in the RDD.
+  * ``batch_size(int)``: The size in bytes to batch up in an unlogged batch of 
+  CQL inserts.
+  * ``batch_buffer_size(int)``: The maximum number of batches which are 
+  'pending'.
+  * ``batch_grouping_key(string)``: The way batches are formed (defaults 
+  to "partition"):
      * ``all``: any row can be added to any batch
      * ``replicaset``: rows are batched for replica sets 
      * ``partition``: rows are batched by their partition key
-  * ``consistency_level(cassandra.ConsistencyLevel)``: The consistency level used in writing to Cassandra.
-  * ``parallelism_level(int)``: The maximum number of batches written in parallel.
-  * ``throughput_mibps``: Maximum write throughput allowed per single core in MB/s.
-  * ``ttl(int or timedelta)``: The time to live as milliseconds or timedelta to use for the values.
-  * ``timestamp(int, date or datetime)``: The timestamp in milliseconds, date or datetime to use for the values.
+  * ``consistency_level(cassandra.ConsistencyLevel)``: The consistency level 
+  used in writing to Cassandra.
+  * ``parallelism_level(int)``: The maximum number of batches written in 
+  parallel.
+  * ``throughput_mibps``: Maximum write throughput allowed per single core in 
+  MB/s.
+  * ``ttl(int or timedelta)``: The time to live as milliseconds or timedelta to 
+  use for the values.
+  * ``timestamp(int, date or datetime)``: The timestamp in milliseconds, date 
+  or datetime to use for the values.
   * ``metrics_enabled(bool)``: Whether to enable task metrics updates.
 
 
 ### pyspark_cassandra.CassandraRDD
 
-A `CassandraRDD` is very similar to a regular `RDD` in pyspark. It is extended with the following methods: 
+A `CassandraRDD` is very similar to a regular `RDD` in pyspark. It is extended 
+with the following methods: 
 
 * ``select(*columns)``: Creates a CassandraRDD with the select clause applied.
-* ``where(clause, *args)``: Creates a CassandraRDD with a CQL where clause applied. The clause can contain ? markers with the arguments supplied as *args.
+* ``where(clause, *args)``: Creates a CassandraRDD with a CQL where clause 
+applied. The clause can contain ? markers with the arguments supplied as *args.
 * ``limit(num)``: Creates a CassandraRDD with the limit clause applied.
-* ``take(num)``: Takes at most ``num`` records from the Cassandra table. Note that if ``limit()`` was invoked before ``take()`` a normal pyspark ``take()`` is performed. Otherwise, first limit is set and _then_ a ``take()`` is performed.
-* ``cassandraCount()``: Lets Cassandra perform a count, instead of loading the data to Spark first.
-* ``saveToCassandra(...)``: As above, but the keyspace and/or table __may__ be omitted to save to the same keyspace and/or table. 
+* ``take(num)``: Takes at most ``num`` records from the Cassandra table. Note 
+that if ``limit()`` was invoked before ``take()`` a normal pyspark ``take()`` 
+is performed. Otherwise, first limit is set and _then_ a ``take()`` is 
+performed.
+* ``cassandraCount()``: Lets Cassandra perform a count, instead of loading the 
+data to Spark first.
+* ``saveToCassandra(...)``: As above, but the keyspace and/or table __may__ be 
+omitted to save to the same keyspace and/or table. 
 * ``spanBy(*columns)``: Groups rows by the given columns without shuffling. 
-* ``joinWithCassandraTable(keyspace, table)``: Join an RDD with a Cassandra table on the partition key. Use .on(...) to specifiy other columns to join on. .select(...), .where(...) and .limit(...) can be used as well.
-* ``deleteFromCassandra(keyspace, table, ...)``: Delete rows and columns from cassandra by implicit `deleteFromCassandra` call
+* ``joinWithCassandraTable(keyspace, table)``: Join an RDD with a Cassandra 
+table on the partition key. Use .on(...) to specify other columns to join on.
+.select(...), .where(...) and .limit(...) can be used as well.
+* ``deleteFromCassandra(keyspace, table, ...)``: Delete rows and columns from 
+cassandra by implicit `deleteFromCassandra` call
 
 
 ### pyspark_cassandra.streaming
 
-When importing ```pyspark_cassandra.streaming``` the method ``saveToCassandra(...)``` is made available on DStreams. Also support for joining with a Cassandra table is added:
+When importing ```pyspark_cassandra.streaming``` the method 
+``saveToCassandra(...)``` is made available on DStreams. Also support for 
+joining with a Cassandra table is added:
 * ``joinWithCassandraTable(keyspace, table, selected_columns, join_columns)``: 
-* ``deleteFromCassandra(keyspace, table, ...)``: Delete rows and columns from cassandra by implicit `deleteFromCassandra` call
+ Join an RDD with a Cassandra table on the partition key. Use .on(...) to
+ specify other columns to join on. .select(...), .where(...) and .limit(...) can
+  be used as well.
+* ``deleteFromCassandra(keyspace, table, ...)``: Delete rows and columns from 
+cassandra by implicit `deleteFromCassandra` call
 
 
 Examples
@@ -226,9 +287,10 @@ conf = SparkConf() \
 sc = CassandraSparkContext(conf=conf)
 ```
 
-Using select and where to narrow the data in an RDD and then filter, map, reduce and collect it::
+Using select and where to narrow the data in an RDD and then filter, map, 
+reduce and collect it::
 
-```python	
+```python
 sc \
 	.cassandraTable("keyspace", "table") \
 	.select("col-a", "col-b") \
@@ -260,9 +322,12 @@ rdd.saveToCassandra(
 )
 ```
 
-Create a streaming context, convert every line to a generater of words which are saved to cassandra. Through this example all unique words are stored in Cassandra.
+Create a streaming context, convert every line to a generater of words which 
+are saved to cassandra. Through this example all unique words are stored in 
+Cassandra.
 
-The words are wrapped as a tuple so that they are in a format which can be stored. A dict or a pyspark_cassandra.Row object would have worked as well.
+The words are wrapped as a tuple so that they are in a format which can be 
+stored. A dict or a pyspark_cassandra.Row object would have worked as well.
 
 ```python
 from pyspark.streaming import StreamingContext
@@ -293,13 +358,15 @@ for left, right in joined:
 Or with a DStream:
 
 ```python
-joined = dstream.joinWithCassandraTable(self.keyspace, self.table, ['e-mail', 'followers'], ['id'])
+joined = dstream.joinWithCassandraTable(self.keyspace, self.table, \
+    ['e-mail', 'followers'], ['id'])
 ```
 
 Releasing
 ---------
 
-```
+```console
+
 $ pip install bumpversion
 
 $ bumpversion --dry-run --verbose $CURRENT_VERSION --new-version=$NEW_VERSION
@@ -309,12 +376,14 @@ $ bumpversion $CURRENT_VERSION --new-version=$NEW_VERSION
 $ git push
 
 $ git push --tags origin
+
 ```
 
 Problems / ideas?
 ------------------
-Feel free to use the issue tracker propose new functionality and / or report bugs. In case of bugs please provides some code to reproduce the issue or at least some context information such as software used, CQL schema, etc.
-
+Feel free to use the issue tracker propose new functionality and / or report 
+bugs. In case of bugs please provides some code to reproduce the issue or at 
+least some context information such as software used, CQL schema, etc.
 
 Contributing
 -------------
