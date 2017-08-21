@@ -5,8 +5,9 @@ CHANGES
 0.6.0 (unreleased)
 ------------------
 
-* integration tests running against C* 2.1.18, 2.2.10 and 3.0.14
+* integration tests running against C* 2.1.18, 2.2.10, 3.0.14 and 3.11.0
 * leverage spark-cassandra-connector 2.0.3
+* build against Spark 2.2.0
 
 0.5.0 (2017-06-19)
 ------------------
