@@ -12,7 +12,7 @@ Connector](https://github.com/datastax/spark-cassandra-connector).
 This module provides Python support for Apache Spark's Resilient Distributed
 Datasets from Apache Cassandra CQL rows using [Cassandra Spark
 Connector](https://github.com/datastax/spark-cassandra-connector) within
-PySpark, both in the interactive shell and in Python programmes submitted with
+PySpark, both in the interactive shell and in Python programs submitted with
 spark-submit.
 
 This project was initially forked from
@@ -32,7 +32,7 @@ no longer maintain it.
 
 Compatibility
 -------------
-Feedback on (in-)compatibility is much appreciated.
+Feedback on (in-)compatibility are much appreciated.
 
 ### Spark
 The current version of PySpark Cassandra is successfully used with Spark version
