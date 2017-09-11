@@ -18,6 +18,7 @@ clean-dist:
 	rm -rf python/*.egg-info
 	rm -rf .tox
 	rm -rf .ccm
+	rm -rf venv
 
 install-venv:
 	test -d venv || virtualenv venv
@@ -30,7 +31,7 @@ install-ccm: install-venv
 
 start-cassandra: install-ccm	
 	mkdir -p .ccm
-	venv/bin/ccm status || venv/bin/ccm create pyspark_cassandra_test -v $(CASSANDRA_VERSION) -n 1 -s
+	venv/bin/ccm status || venv/bin/ccm create pyspark_cassandra_test -v $(CASSANDRA_VERSION) -n 1 -s && venv/bin/ccm start
 	
 stop-cassandra:
 	venv/bin/ccm remove
