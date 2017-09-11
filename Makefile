@@ -4,8 +4,6 @@ SCALA_TARGET_VERSION=2.11
 
 .PHONY: clean clean-pyc clean-dist dist test-travis
 
-
-
 clean: clean-dist clean-pyc
 
 clean-pyc:
@@ -19,7 +17,7 @@ clean-dist:
 	rm -rf python/build/
 	rm -rf python/*.egg-info
 	rm -rf .tox
-
+	rm -rf .ccm
 
 install-venv:
 	test -d venv || virtualenv venv
@@ -37,24 +35,17 @@ start-cassandra: install-ccm
 stop-cassandra:
 	venv/bin/ccm remove
 
-
-
 test: test-python test-scala test-integration
 
 test-python:
 
 test-scala:
 
-test-integration: \
-	test-integration-setup \
-	test-integration-matrix \	
-	test-integration-teardown
+test-integration: test-integration-setup test-integration-matrix test-integration-teardown
 	
-test-integration-setup: \
-	start-cassandra
+test-integration-setup: start-cassandra
 
-test-integration-teardown: \
-	stop-cassandra
+test-integration-teardown: stop-cassandra
 	
 test-integration-matrix: \
 	install-cassandra-driver \
@@ -95,17 +86,13 @@ define test-integration-for-version
 	echo ======================================================================
 endef
 
-
-
 dist: clean-pyc
 	sbt -batch assembly
 	cd python ; \
 		find . -mindepth 2 -name '*.py' -print | \
 		zip ../target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra-assembly-$(VERSION).jar -@
 
-
 all: clean lint dist
-
 
 publish: clean
 	# use spark packages to create the distribution
