@@ -30,8 +30,9 @@ addons:
     - python-virtualenv
     - libev4
     - libev-dev
+    - ant
   
-script: JVM_OPTS= make clean lint dist start-cassandra test-travis stop-cassandra
+script: JVM_OPTS=-XX:-UseNUMA make clean lint dist start-cassandra test-travis stop-cassandra
 
 dist: trusty
 sudo: false
