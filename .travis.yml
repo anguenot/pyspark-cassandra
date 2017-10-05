@@ -34,6 +34,8 @@ addons:
   
 script: JVM_OPTS=-XX:-UseNUMA make clean lint dist start-cassandra test-travis stop-cassandra
 
+# trusty w/ sudo-enabled VM. (no container-based trusty because of Java errors w/ Cassandra)
+# https://docs.travis-ci.com/user/reference/overview/
 sudo: required
 dist: trusty
 
