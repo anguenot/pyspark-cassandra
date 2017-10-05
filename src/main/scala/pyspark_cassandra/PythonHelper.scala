@@ -29,7 +29,8 @@ import pyspark_cassandra.Utils._
 import pyspark_util.Conversions._
 import pyspark_util.Pickling._
 
-class PythonHelper() {
+@SerialVersionUID(1L)
+class PythonHelper() extends Serializable {
   TypeConverter.registerConverter(UnpickledUUIDConverter)
   implicit val pickling = new Pickling()
 
