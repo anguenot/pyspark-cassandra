@@ -34,7 +34,6 @@ addons:
   
 script: JVM_OPTS=-XX:-UseNUMA make clean lint dist start-cassandra test-travis stop-cassandra
 
-dist: trusty
 sudo: false
 
 cache:
