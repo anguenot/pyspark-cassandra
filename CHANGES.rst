@@ -2,7 +2,7 @@
 CHANGES
 =======
 
-0.6.0 (unreleased)
+0.6.0 (2017-10-05)
 ------------------
 
 * make PythonHelper.scala serializable
