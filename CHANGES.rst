@@ -2,6 +2,11 @@
 CHANGES
 =======
 
+0.7.0 (unreleased)
+------------------
+
+* integration tests running against Spark 2.1.2
+
 0.6.0 (2017-10-05)
 ------------------
 
