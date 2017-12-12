@@ -2,7 +2,10 @@
 CHANGES
 =======
 
-0.7.0 (unreleased)
+0.8.0 (unreleased)
+------------------
+
+0.7.0 (2017-12-12)
 ------------------
 
 * spark-cassandra-connector 2.0.6
