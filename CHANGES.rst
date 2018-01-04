@@ -5,6 +5,8 @@ CHANGES
 0.8.0 (unreleased)
 ------------------
 
+* integration tests running against Spark 2.2.1
+
 0.7.0 (2017-12-12)
 ------------------
 
