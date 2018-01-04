@@ -52,13 +52,13 @@ test-integration-matrix: \
 	install-cassandra-driver \
 	test-integration-spark-2.0.2 \
 	test-integration-spark-2.1.2 \
-	test-integration-spark-2.2.0
+	test-integration-spark-2.2.1
 
 test-travis: install-cassandra-driver
 	$(call test-integration-for-version,$$SPARK_VERSION,$$SPARK_PACKAGE_TYPE)
 
-test-integration-spark-2.2.0:
-	$(call test-integration-for-version,2.2.0,hadoop2.7)
+test-integration-spark-2.2.1:
+	$(call test-integration-for-version,2.2.1,hadoop2.7)
 
 test-integration-spark-2.1.2:
 	$(call test-integration-for-version,2.1.2,hadoop2.7)
