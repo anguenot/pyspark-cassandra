@@ -13,13 +13,13 @@ credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
 licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
 
 libraryDependencies ++= Seq(
-  "com.datastax.spark" %% "spark-cassandra-connector" % "2.0.6",
+  "com.datastax.spark" %% "spark-cassandra-connector" % "2.0.7",
   "net.razorvine" % "pyrolite" % "4.10"
 )
 
 spName := "anguenot/pyspark-cassandra"
 
-sparkVersion := "2.2.0"
+sparkVersion := "2.2.1"
 
 sparkComponents ++= Seq("core", "streaming", "sql")
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
