@@ -4,7 +4,7 @@ CHANGES
 
 0.8.0 (unreleased)
 ------------------
-* spark-cassandra-connector 2.0.7
+* spark-cassandra-connector 2.0.8
 * integration tests running against Spark 2.2.1
 * build against Spark 2.2.1
 * integration tests running against Cassandra 3.11.2, 3.0.16, 2.2.12, 2.1.20
