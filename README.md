@@ -209,8 +209,14 @@ PySpark Cassandra supports saving arbitrary RDD's to Cassandra using:
 RDD is expected to contain dicts with keys mapping to CQL columns. Additional 
 arguments which can be supplied are:
 
-  * ``columns(iterable)``: The columns to save, i.e. which keys to take from the
-   dicts in the RDD.
+  * ``columns(iterable)``: The columns to save, i.e. which keys to take from the dicts in the RDD.
+    * ``array``: list of columns to be saved with default behaviour (overwrite)
+    * ``dictionary``: list of columns (keys) and cassandra collections modify operation to perform (values)  
+    -``""`` : emulate 'array' default behaviour. to be used for non-collection fields  
+    -``"append" | "add"`` : append to a collection (lists, sets, maps)  
+    -``"prepend"`` : prepend to a collection (lists)  
+    -``"remove"`` : remove from a collection (lists, sets)  
+    -``"overwrite"`` : overwrite a collection (lists, sets, maps)  
   * ``batch_size(int)``: The size in bytes to batch up in an unlogged batch of 
   CQL inserts.
   * ``batch_buffer_size(int)``: The maximum number of batches which are 
@@ -320,6 +326,23 @@ rdd.saveToCassandra(
 	"table",
 	ttl=timedelta(hours=1),
 )
+```
+
+Modify CQL collections::
+
+```python
+
+# Cassandra test table schema
+# create table test (user_id text, city text,  test_set set<text>, test_list list<text>, test_map map<text,text>, PRIMARY KEY (user_id));
+
+rdd = sc.parallelize([{"user_id":"123","city":"berlin","test_set":["a"],"test_list":["a"],"test_map":{"a":"1"}}])
+
+rdd.saveToCassandra("ks","test")
+
+rdd = sc.parallelize([{"user_id":"123","city":"berlin","test_set":["a"],"test_list":["b"],"test_map":{"b":"2"}}])
+
+rdd.saveToCassandra("ks","test", {"user_id":"", "city":"", "test_set":"remove", "test_list":"prepend", "test_map":"append"})
+
 ```
 
 Create a streaming context, convert every line to a generater of words which 
