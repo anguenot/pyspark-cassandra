@@ -58,4 +58,4 @@ for _ in range(10):
 
 __author__ = 'Julien Anguenot'
 __email__ = 'julien@anguenot.org'
-__version__ = '0.7.0'
+__version__ = '0.8.0'
