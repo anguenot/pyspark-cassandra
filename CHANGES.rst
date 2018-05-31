@@ -2,8 +2,9 @@
 CHANGES
 =======
 
-0.8.0 (unreleased)
+0.8.0 (2018-05-31)
 ------------------
+
 * spark-cassandra-connector 2.3.0
 * integration tests running against Spark 2.2.1, Spark 2.3.0
 * build against Spark 2.3.0
