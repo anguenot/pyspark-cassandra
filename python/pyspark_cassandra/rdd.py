@@ -78,9 +78,15 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None,
     # create write config as map
     write_conf = WriteConf.build(write_conf, **write_conf_kwargs)
     write_conf = as_java_object(rdd.ctx._gateway, write_conf.settings())
-    # convert the columns to a string array
-    columns = as_java_array(rdd.ctx._gateway, "String",
-                            columns) if columns else None
+
+    if isinstance(columns, dict):
+        # convert the columns to a map where the value is the
+        # action inside Cassandra
+        columns = as_java_object(rdd.ctx._gateway, columns) if columns else None
+    else:
+        # convert the columns to a string array
+        columns = as_java_array(rdd.ctx._gateway, "String",
+                                columns) if columns else None
 
     helper(rdd.ctx) \
         .saveToCassandra(

@@ -74,6 +74,16 @@ class PythonHelper() extends Serializable {
 
   /* rdds ------------------------------------------------------------------ */
 
+  def saveToCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String, columns: JMap[String, String],
+                      rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any]) = {
+
+    val selectedColumns = columnSelector(columns)
+    val conf = parseWriteConf(Some(writeConf))
+
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    rdd.rdd.unpickle().saveToCassandra(keyspace, table, selectedColumns, conf)
+  }
+
   def saveToCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String, columns: Array[String],
                       rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any]) = {
 

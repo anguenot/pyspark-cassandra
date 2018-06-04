@@ -25,6 +25,26 @@ import org.apache.spark.SparkContext
 import scala.collection.JavaConversions._
 
 object Utils {
+
+  def columnSelector(columns: JMap[String, String]) = {
+
+    if (columns != null && ! columns.isEmpty()) {
+      SomeColumns(mapAsScalaMap(columns).toList.map(entry => (entry._1, entry._2) match {
+        case (key, "append") => CollectionColumnName(key, None, CollectionAppend)
+        case (key, "add") => CollectionColumnName(key, None, CollectionAppend)
+        case (key, "overwrite") => CollectionColumnName(key, None, CollectionOverwrite)
+        case (key, "prepend") => CollectionColumnName(key, None, CollectionPrepend)
+        case (key, "remove") => CollectionColumnName(key, None, CollectionRemove)
+        case (key, "") => ColumnName(key)
+        case (key, _) => throw new IllegalArgumentException("The only possible values are: " +
+          "append/add/overwrite/prepend/remove or empty")
+      }): _*)
+
+    } else {
+      AllColumns
+    }
+  }
+
   def columnSelector(columns: Array[String], default: ColumnSelector = AllColumns) = {
     if (columns != null && columns.length > 0) {
       SomeColumns(columns.map {

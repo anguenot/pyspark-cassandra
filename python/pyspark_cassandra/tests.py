@@ -199,6 +199,95 @@ class CollectionTypesTest(CassandraTestCase):
                 range(1, 10)}
         self.collections_common_tests(maps, 's')
 
+    def collections_operations_tests(self, before, update, key,
+                                     column, operation):
+
+        self.sc.parallelize(before).saveToCassandra(self.keyspace, self.table)
+
+        self.sc.parallelize(update).saveToCassandra(
+                                        self.keyspace, self.table,
+                                        {'key': '', column: operation})
+
+        collected = self.sc.cassandraTable(self.keyspace, self.table).collect()
+
+        for row in collected:
+            if row.key == key:
+                after = getattr(row, column)
+
+        return after
+
+    def test_collections_operations_list(self):
+        column = 'l'
+        key = 'cql_col_tests'
+        before = [{'key': key, column: ['b', 'c', 'd']}]
+
+        update = [{'key': key, column: ['a', 'a']}]
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'append')
+        expected = ['b', 'c', 'd', 'a', 'a']
+        self.assertEqual(after, expected)
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'prepend')
+        expected = ['a', 'a', 'b', 'c', 'd']
+        self.assertEqual(after, expected)
+
+        update = [{'key': key, column: ['c']}]
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'remove')
+        expected = ['b', 'd']
+        self.assertEqual(after, expected)
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'overwrite')
+        expected = ['c']
+        self.assertEqual(after, expected)
+
+    def test_collections_operations_set(self):
+        column = 's'
+        key = 'cql_col_tests'
+        before = [{'key': key, column: ['b', 'c', 'd']}]
+
+        update = [{'key': key, column: ['a', 'a']}]
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'append')
+        expected = {'a', 'b', 'c', 'd'}
+        self.assertEqual(after, expected)
+
+        update = [{'key': key, column: ['c']}]
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'remove')
+        expected = {'b', 'd'}
+        self.assertEqual(after, expected)
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'overwrite')
+        expected = {'c'}
+        self.assertEqual(after, expected)
+
+    def test_collections_operations_map(self):
+        column = 'm'
+        key = 'cql_col_tests'
+        before = [{'key': key, column: {'b': 'b', 'c': 'c', 'd': 'd'}}]
+
+        update = [{'key': key, column: {'a': 'a', 'a': 'a'}}]
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'append')
+        expected = {'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd'}
+        self.assertEqual(after, expected)
+
+        update = [{'key': key, column: {'c': 'c'}}]
+
+        after = self.collections_operations_tests(before, update, key,
+                                                  column, 'overwrite')
+        expected = {'c': 'c'}
+        self.assertEqual(after, expected)
+
 
 class UDTTest(CassandraTestCase):
     table = "udt_types"
