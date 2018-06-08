@@ -2,8 +2,8 @@
 CHANGES
 =======
 
-0.9.0 (undefined)
------------------
+0.9.0 (2018-06-08)
+------------------
 
 * Implementation of append/add/overwrite/prepend/remove as a dictionary in python interface
 
