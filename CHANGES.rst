@@ -2,6 +2,12 @@
 CHANGES
 =======
 
+0.10.0 (unreleased)
+-------------------
+
+* build against Spark 2.3.1
+* integration tests running against Spark 2.3.0
+
 0.9.0 (2018-06-08)
 ------------------
 

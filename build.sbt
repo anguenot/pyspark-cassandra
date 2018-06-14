@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
 
 spName := "anguenot/pyspark-cassandra"
 
-sparkVersion := "2.3.0"
+sparkVersion := "2.3.1"
 
 sparkComponents ++= Seq("core", "streaming", "sql")
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
