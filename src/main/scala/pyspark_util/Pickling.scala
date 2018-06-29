@@ -65,6 +65,7 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(Class.forName("java.nio.HeapByteBuffer"), ByteBufferPickler)
     Pickler.registerCustomPickler(classOf[GatheredByteBuffers], GatheringByteBufferPickler)
     Pickler.registerCustomPickler(Class.forName("scala.collection.immutable.$colon$colon"), ListPickler)
+    Pickler.registerCustomPickler(classOf[List[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[ArraySeq[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Buffer[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[WrappedArray.ofRef[_]], ListPickler)

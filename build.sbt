@@ -14,7 +14,7 @@ licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
 
 libraryDependencies ++= Seq(
   "com.datastax.spark" %% "spark-cassandra-connector" % "2.3.0",
-  "net.razorvine" % "pyrolite" % "4.10"
+  "net.razorvine" % "pyrolite" % "4.20"
 )
 
 spName := "anguenot/pyspark-cassandra"
