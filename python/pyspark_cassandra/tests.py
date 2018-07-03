@@ -143,6 +143,9 @@ class CollectionTypesTest(CassandraTestCase):
         'm': 'map<text, text>',
         'l': 'list<text>',
         's': 'set<text>',
+        'fm': 'frozen<map<text, text>>',
+        'fl': 'frozen<list<text>>',
+        'fs': 'frozen<set<text>>',
     }
 
     @classmethod
@@ -198,6 +201,22 @@ class CollectionTypesTest(CassandraTestCase):
         maps = {'s%s' % i: set(string.ascii_lowercase[:i]) for i in
                 range(1, 10)}
         self.collections_common_tests(maps, 's')
+
+    def test_frozen_list(self):
+        lists = {'fl%s' % i: list(string.ascii_lowercase[:i]) for i in
+                 range(0, 10)}
+        self.collections_common_tests(lists, 'fl')
+
+    def test_frozen_map(self):
+        maps = {
+            'fm%s' % i: {k: 'x' for k in string.ascii_lowercase[:i]} for i in
+            range(0, 10)}
+        self.collections_common_tests(maps, 'fm')
+
+    def test_frozen_set(self):
+        maps = {'fs%s' % i: set(string.ascii_lowercase[:i]) for i in
+                range(0, 10)}
+        self.collections_common_tests(maps, 'fs')
 
     def collections_operations_tests(self, before, update, key,
                                      column, operation):
