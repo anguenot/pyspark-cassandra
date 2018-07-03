@@ -102,6 +102,7 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(classOf[Set.Set4[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[HashSet1[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[HashTrieSet[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Map[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[WithDefault[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Map1[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Map2[_, _]], MapPickler)
