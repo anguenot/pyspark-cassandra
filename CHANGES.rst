@@ -7,6 +7,8 @@ CHANGES
 
 * build against Spark 2.3.1
 * integration tests running against Spark 2.3.0
+* avoid exceptions for empty lists
+* fix syntax error in `requirements_dev.txt`
 
 0.9.0 (2018-06-08)
 ------------------
