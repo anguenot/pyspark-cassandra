@@ -19,12 +19,14 @@ import java.math.BigInteger
 import java.net.{Inet4Address, Inet6Address, InetAddress}
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
-import java.util.{Collection, HashMap, UUID, Map => JMap}
+import java.util.{Collection, HashMap, UUID, Map => JMap, Date}
 
 import net.razorvine.pickle._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 import pyspark_util.Conversions._
+
+ import com.datastax.driver.core.LocalDate
 
 import scala.collection.JavaConversions._
 import scala.collection.convert.Wrappers.{JListWrapper, JMapWrapper, JSetWrapper}
@@ -55,9 +57,12 @@ class Pickling extends Serializable {
 
   def register() {
     Unpickler.registerConstructor("uuid", "UUID", UUIDUnpickler)
+    Unpickler.registerConstructor("datetime", "date", CassandraLocalDateUnpickler)
 
     Pickler.registerCustomPickler(classOf[UUID], UUIDPickler)
     Pickler.registerCustomPickler(classOf[UUIDHolder], UUIDPickler)
+    Pickler.registerCustomPickler(classOf[org.joda.time.LocalDate], JodaLocalDatePickler) 
+    Pickler.registerCustomPickler(classOf[com.datastax.driver.core.LocalDate], DatastaxLocalDatePickler) 
     Pickler.registerCustomPickler(classOf[InetAddress], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet4Address], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet6Address], AsStringPickler)
@@ -176,6 +181,74 @@ trait StructUnpickler extends IObjectConstructor {
 object AsStringPickler extends IObjectPickler {
   def pickle(o: Any, out: OutputStream, pickler: Pickler) = pickler.save(o.toString())
 }
+
+object DatastaxLocalDatePickler extends IObjectPickler {
+  def pickle(o: Any, out: OutputStream, pickler: Pickler): Unit = {
+		out.write(Opcodes.GLOBAL);
+		out.write("datetime\ndate\n".getBytes());
+		// python itself uses the constructor with a single timestamp byte string of len 4,
+		// we take the easy way out and just provide 3 ints (year/month/day)
+		val date = o.asInstanceOf[com.datastax.driver.core.LocalDate]
+		pickler.save(date.getYear());
+		pickler.save(date.getMonth());    // months start at 0 in java
+		pickler.save(date.getDay());
+		out.write(Opcodes.TUPLE3);
+		out.write(Opcodes.REDUCE);
+  }
+}
+
+object JodaLocalDatePickler extends IObjectPickler {
+  def pickle(o: Any, out: OutputStream, pickler: Pickler): Unit = {
+		out.write(Opcodes.GLOBAL);
+		out.write("datetime\ndate\n".getBytes());
+		// python itself uses the constructor with a single timestamp byte string of len 4,
+		// we take the easy way out and just provide 3 ints (year/month/day)
+		val date = o.asInstanceOf[org.joda.time.LocalDate]
+		pickler.save(date.getYear());
+		pickler.save(date.getMonthOfYear());    // months start at 0 in java
+		pickler.save(date.getDayOfMonth());
+		out.write(Opcodes.TUPLE3);
+		out.write(Opcodes.REDUCE);
+  }
+}
+
+object CassandraLocalDateUnpickler extends IObjectConstructor {
+  def construct(args: Array[Object]): LocalDate = {
+    args.size match {
+      case 3 => {
+        val year = args(0).asInstanceOf[Int]
+        val month = args(1).asInstanceOf[Int]
+        val day = args(2).asInstanceOf[Int]
+    		LocalDate.fromYearMonthDay(year, month, day)
+      }
+			case 1 => args(0) match {
+				case params: String => {
+					if (params.size != 4)
+						throw new PickleException("invalid pickle data for date; expected arg of length 4, got length "+params.size)
+
+					val yhi = params(0)
+          val ylo = params(1)
+					val month = params(2)
+          val day = params(3)
+  				LocalDate.fromYearMonthDay(yhi * 256 + ylo, month, day)
+				}
+				case _ => {
+					val params = args(0).asInstanceOf[Array[Byte]]
+					if (params.size != 4)
+						throw new PickleException("invalid pickle data for date; expected arg of length 4, got length "+params.size)
+					val yhi = params(0)&0xff
+					val ylo = params(1)&0xff
+					val month = (params(2)&0xff) // blargh: months start at 0 in java
+					val day = params(3)&0xff
+  				val date = LocalDate.fromYearMonthDay(yhi * 256 + ylo, month, day)
+					date
+				}
+			}
+      case _ => throw new PickleException("invalid pickle data for date; expected 1 arg, got "+args.size)
+    }
+  }
+}
+
 
 object UUIDPickler extends IObjectPickler {
   def pickle(o: Any, out: OutputStream, pickler: Pickler): Unit = {
