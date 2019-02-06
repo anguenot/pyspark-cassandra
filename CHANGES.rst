@@ -2,7 +2,15 @@
 CHANGES
 =======
 
-0.10.0 (unreleased)
+0.10.1 (2019-02-06)
+-------------------
+
+* build against Spark 2.3.2 (see https://github.com/datastax/spark-cassandra-connector)
+* deprecate Spark 2.0, 2.1 and 2.2
+* integration tests running against Spark 2.3.2
+* integration tests running against Cassandra 3.11.3, 3.0.17, 2.2.13, 2.1.20
+
+0.10.0 (2019-02-06)
 -------------------
 
 * build against Spark 2.3.1
