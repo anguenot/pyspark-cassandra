@@ -2,7 +2,7 @@
 CHANGES
 =======
 
-0.10.0 (unreleased)
+0.10.0 (2019-02-06)
 -------------------
 
 * build against Spark 2.3.1
