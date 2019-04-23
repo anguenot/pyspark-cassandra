@@ -2,6 +2,12 @@
 CHANGES
 =======
 
+0.11.0 (unreleased)
+-------------------
+
+* integration tests running against Spark 2.3.3
+* integration tests running against Cassandra 3.11.4, 3.0.18, 2.2.14, 2.1.21
+
 0.10.1 (2019-02-06)
 -------------------
 

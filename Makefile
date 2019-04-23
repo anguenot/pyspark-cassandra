@@ -1,6 +1,8 @@
 SHELL = /bin/bash
 VERSION = $(shell cat version.txt)
 SCALA_TARGET_VERSION=2.11
+CASSANDRA_VERSION ?= 3.11.4
+all:;: '$(CASSANDRA_VERSION)'
 
 .PHONY: clean clean-pyc clean-dist dist test-travis
 
@@ -21,7 +23,7 @@ clean-dist:
 	rm -rf venv
 
 install-venv:
-	test -d venv || virtualenv venv
+	test -d venv || virtualenv venv --python=python2.7
 	
 install-cassandra-driver: install-venv
 	venv/bin/pip install cassandra-driver
@@ -50,20 +52,20 @@ test-integration-teardown: stop-cassandra
 	
 test-integration-matrix: \
 	install-cassandra-driver \
-	test-integration-spark-2.3.2
+	test-integration-spark-2.3.3
 
 test-travis: install-cassandra-driver
 	$(call test-integration-for-version,$$SPARK_VERSION,$$SPARK_PACKAGE_TYPE)
 
-test-integration-spark-2.3.2:
-	$(call test-integration-for-version,2.3.2,hadoop2.7)
+test-integration-spark-2.3.3:
+	$(call test-integration-for-version,2.3.3,hadoop2.7)
 
 define test-integration-for-version
 	echo ======================================================================
 	echo testing integration with spark-$1
 	
 	mkdir -p lib && test -d lib/spark-$1-bin-$2 || \
-		(pushd lib && curl http://mirrors.ocf.berkeley.edu/apache/spark/spark-$1/spark-$1-bin-$2.tgz | tar xz && popd)
+		(pushd lib && curl https://archive.apache.org/dist/spark/spark-$1/spark-$1-bin-$2.tgz | tar xz && popd)
 	
 	cp log4j.properties lib/spark-$1-bin-$2/conf/
 
