@@ -99,7 +99,7 @@ class SimpleTypesTest(SimpleTypesTestBase):
         self.read_write_test('boolean', False)
 
     def test_date(self):
-        self.read_write_test('date', '2018-08-01')
+        self.read_write_test('date', datetime.date(2018, 8, 1))
 
     def test_decimal(self):
         self.read_write_test('decimal', Decimal(0.5))
@@ -121,9 +121,8 @@ class SimpleTypesTest(SimpleTypesTestBase):
     def test_text(self):
         self.read_write_test('text', u'some text')
 
-    # TODO implement test with datetime with tzinfo without depending on pytz
-    # def test_timestamp(self):
-    #     self.read_write_test('timestamp', datetime(2015, 1, 1))
+    def test_timestamp(self):
+        self.read_write_test('timestamp', datetime(2015, 1, 1))
 
     def test_timeuuid(self):
         uuid = uuid_from_time(datetime(2015, 1, 1))
