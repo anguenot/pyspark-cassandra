@@ -66,7 +66,7 @@ class SimpleTypesTestBase(CassandraTestCase):
     table = "simple_types"
 
     simple_types = [
-        'ascii', 'bigint', 'blob', 'boolean', 'decimal', 'double', 'float',
+        'ascii', 'bigint', 'blob', 'boolean', 'date', 'decimal', 'double', 'float',
         'inet', 'int', 'text', 'timestamp', 'timeuuid', 'varchar', 'varint',
         'uuid',
     ]
@@ -97,6 +97,9 @@ class SimpleTypesTest(SimpleTypesTestBase):
 
     def test_boolean(self):
         self.read_write_test('boolean', False)
+
+    def test_date(self):
+        self.read_write_test('date', '2018-08-01')
 
     def test_decimal(self):
         self.read_write_test('decimal', Decimal(0.5))
