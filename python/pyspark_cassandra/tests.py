@@ -16,7 +16,7 @@ import time
 import unittest
 import uuid
 from _functools import partial
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from decimal import Decimal
 from itertools import chain
 from math import sqrt
@@ -99,7 +99,7 @@ class SimpleTypesTest(SimpleTypesTestBase):
         self.read_write_test('boolean', False)
 
     def test_date(self):
-        self.read_write_test('date', datetime.date(2018, 8, 1))
+        self.read_write_test('date', date(2018, 8, 1))
 
     def test_decimal(self):
         self.read_write_test('decimal', Decimal(0.5))
