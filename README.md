@@ -163,7 +163,7 @@ Column values are related between CQL and python as follows:
 |    set    |          set          |
 |    list   |         list          |
 |    text   |    unicode string     |
-|    date   |   datetime.datetime   |
+|    date   |   datetime.date       |
 | timestamp |   datetime.datetime   |
 |  timeuuid |       uuid.UUID       |
 |  varchar  |    unicode string     |
