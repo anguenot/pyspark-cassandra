@@ -121,8 +121,12 @@ class SimpleTypesTest(SimpleTypesTestBase):
     def test_text(self):
         self.read_write_test('text', u'some text')
 
-    def test_timestamp(self):
-        self.read_write_test('timestamp', datetime(2015, 1, 1))
+    # TODO implement test with datetime with tzinfo without depending on pytz
+    # def test_timestamp(self):
+    #     self.read_write_test('timestamp', datetime(2015, 1, 1))
+
+    # def test_timestamp(self):
+    #     self.read_write_test('timestamp', datetime(2015, 1, 1))
 
     def test_timeuuid(self):
         uuid = uuid_from_time(datetime(2015, 1, 1))

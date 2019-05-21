@@ -57,12 +57,12 @@ class Pickling extends Serializable {
 
   def register() {
     Unpickler.registerConstructor("uuid", "UUID", UUIDUnpickler)
-    Unpickler.registerConstructor("datetime", "date", CassandraLocalDateUnpickler)
+//    Unpickler.registerConstructor("datetime", "date", CassandraLocalDateUnpickler)
 
     Pickler.registerCustomPickler(classOf[UUID], UUIDPickler)
     Pickler.registerCustomPickler(classOf[UUIDHolder], UUIDPickler)
-    Pickler.registerCustomPickler(classOf[org.joda.time.LocalDate], JodaLocalDatePickler) 
-    Pickler.registerCustomPickler(classOf[com.datastax.driver.core.LocalDate], DatastaxLocalDatePickler) 
+//    Pickler.registerCustomPickler(classOf[org.joda.time.LocalDate], JodaLocalDatePickler) 
+//    Pickler.registerCustomPickler(classOf[com.datastax.driver.core.LocalDate], DatastaxLocalDatePickler) 
     Pickler.registerCustomPickler(classOf[InetAddress], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet4Address], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet6Address], AsStringPickler)
