@@ -16,7 +16,7 @@ import time
 import unittest
 import uuid
 from _functools import partial
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from decimal import Decimal
 from itertools import chain
 from math import sqrt
@@ -66,7 +66,7 @@ class SimpleTypesTestBase(CassandraTestCase):
     table = "simple_types"
 
     simple_types = [
-        'ascii', 'bigint', 'blob', 'boolean', 'decimal', 'double', 'float',
+        'ascii', 'bigint', 'blob', 'boolean', 'date', 'decimal', 'double', 'float',
         'inet', 'int', 'text', 'timestamp', 'timeuuid', 'varchar', 'varint',
         'uuid',
     ]
@@ -97,6 +97,9 @@ class SimpleTypesTest(SimpleTypesTestBase):
 
     def test_boolean(self):
         self.read_write_test('boolean', False)
+
+    def test_date(self):
+        self.read_write_test('date', date(2018, 8, 1))
 
     def test_decimal(self):
         self.read_write_test('decimal', Decimal(0.5))
