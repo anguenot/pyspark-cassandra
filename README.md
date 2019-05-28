@@ -44,7 +44,6 @@ for Spark 1.5.x, 1.6.x use [older versions](https://github.com/TargetHolding/pys
 
 ### Cassandra
 PySpark Cassandra is compatible with Cassandra:
-* 2.1.5*
 * 2.2.x
 * 3.0.x
 * 3.11.x

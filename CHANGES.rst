@@ -6,7 +6,8 @@ CHANGES
 -------------------
 
 * integration tests running against Spark 2.3.3
-* integration tests running against Cassandra 3.11.4, 3.0.18, 2.2.14, 2.1.21
+* integration tests running against Cassandra 3.11.4, 3.0.18, 2.2.14
+* drop C* 2.1 support by removing it from the tests matrix.
 
 0.10.1 (2019-02-06)
 -------------------
