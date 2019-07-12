@@ -2,12 +2,13 @@
 CHANGES
 =======
 
-0.11.0 (unreleased)
+0.11.0 (2019-07-12)
 -------------------
 
 * integration tests running against Spark 2.3.3
 * integration tests running against Cassandra 3.11.4, 3.0.18, 2.2.14
-* drop C* 2.1 support by removing it from the tests matrix.
+* [#44] drop C* 2.1 support by removing it from the tests matrix.
+* [#19][#21] date type support
 
 0.10.1 (2019-02-06)
 -------------------
