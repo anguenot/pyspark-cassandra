@@ -1,8 +1,7 @@
+dist: xenial
 language: scala
-
 scala:
-  - "2.11.8"
-
+  - "2.11.12"
 jdk:
   - openjdk8
 
@@ -15,20 +14,18 @@ addons:
   apt:
     packages:
     - build-essential
-    - python-dev
-    - python-pip
+    - python3-dev
+    - python3-pip
     - python-tox
-    - python-virtualenv
+    - python3-virtualenv
     - libev4
     - libev-dev
     - ant
-  
-script: JVM_OPTS=-XX:-UseNUMA make clean lint dist start-cassandra test-travis stop-cassandra
 
-# trusty w/ sudo-enabled VM. (no container-based trusty because of Java errors w/ Cassandra)
-# https://docs.travis-ci.com/user/reference/overview/
-sudo: required
-dist: trusty
+install:
+  - pip3 install tox --user # tox handles the various Python versions we wish to test for support
+
+script: JVM_OPTS=-XX:-UseNUMA make clean lint dist start-cassandra test-travis stop-cassandra
 
 cache:
   directories:

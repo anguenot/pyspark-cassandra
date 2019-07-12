@@ -14,17 +14,11 @@
 
 from setuptools import setup, find_packages
 
-requirements = [
-]
+with open('requirements.txt') as requirements_file:
+    requirements = requirements_file.read().splitlines()
 
-test_requirements = ['bumpversion==0.5.3',
-                     'wheel>=0.29.0',
-                     'watchdog==0.8.3',
-                     'flake8==2.6.2',
-                     'tox==2.3.1',
-                     'coverage==4.1',
-                     'Sphinx==1.4.4'
-                     ],
+with open('requirements_dev.txt') as requirements_dev_file:
+    test_requirements = requirements_dev_file.read().splitlines()
 
 setup(
     name='pyspark_cassandra',
@@ -40,18 +34,12 @@ setup(
     install_requires=requirements,
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
-        'Environment :: Other Environment',
-        'Framework :: Django',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Topic :: Database',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Scientific/Engineering :: Information Analysis',
-        'Topic :: Utilities',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     tests_require=test_requirements
 )

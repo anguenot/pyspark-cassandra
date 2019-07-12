@@ -16,23 +16,23 @@ import time
 import unittest
 import uuid
 from _functools import partial
-from datetime import datetime, timedelta, date
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from itertools import chain
-from math import sqrt
 from uuid import UUID
 
+import pyspark_cassandra.streaming
 from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
+from math import sqrt
 from pyspark import SparkConf
 from pyspark.accumulators import AddingAccumulatorParam
 from pyspark.streaming.context import StreamingContext
+from pyspark_cassandra.conf import ReadConf, WriteConf
 
 import pyspark_cassandra
-import pyspark_cassandra.streaming
-from pyspark_cassandra import CassandraSparkContext, RowFormat, Row, UDT
-from pyspark_cassandra.conf import ReadConf, WriteConf
+from pyspark_cassandra import CassandraSparkContext, Row, RowFormat, UDT
 
 
 class CassandraTestCase(unittest.TestCase):
@@ -90,10 +90,10 @@ class SimpleTypesTest(SimpleTypesTestBase):
         self.read_write_test('ascii', 'some ascii')
 
     def test_bigint(self):
-        self.read_write_test('bigint', sys.maxint)
+        self.read_write_test('bigint', sys.maxsize)
 
     def test_blob(self):
-        self.read_write_test('blob', bytearray('some blob'))
+        self.read_write_test('blob', bytearray('some blob'.encode('ascii')))
 
     def test_boolean(self):
         self.read_write_test('boolean', False)
@@ -553,18 +553,8 @@ class ConfTest(SimpleTypesTestBase):
 
 
 class StreamingTest(SimpleTypesTestBase):
+
     interval = .1
-
-    size = 10
-    count = 3
-
-    rows = [
-        [
-            {'key': str(j * size + i), 'text': str(j * size + i)}
-            for i in range(size)
-        ]
-        for j in range(count)
-    ]
 
     @classmethod
     def setUpClass(cls):
@@ -573,6 +563,15 @@ class StreamingTest(SimpleTypesTestBase):
 
     def setUp(self):
         super(StreamingTest, self).setUp()
+        self.size = 10
+        self.count = 3
+        self.rows = [
+            [
+                {'key': str(j * self.size + i), 'text': str(j * self.size + i)}
+                for i in range(self.size)
+            ]
+            for j in range(self.count)
+        ]
         self.rdds = list(map(self.sc.parallelize, self.rows))
         self.stream = self.ssc.queueStream(self.rdds)
 
@@ -638,7 +637,7 @@ class JoinRDDTest(SimpleTypesTestBase):
 
         rows = [
             # (pk, cc, pk + '-' + cc)
-            (unicode(pk), unicode(cc), unicode(pk + '-' + cc))
+            (pk, cc, pk + '-' + cc)
             for pk in string.ascii_lowercase[:3]
             for cc in (str(i) for i in range(3))
         ]
@@ -967,8 +966,8 @@ class RegressionTest(CassandraTestCase):
         ''')
 
         self.sc.parallelize([
-            Row(name=str(i), data_final=bytearray(str(i)),
-                data_inter=bytearray(str(i)),
+            Row(name=str(i), data_final=bytearray(str(i).encode('ascii')),
+                data_inter=bytearray(str(i).encode('ascii')),
                 family_label=str(i), rand=i / 10, source=str(i), score=i * 10)
             for i in range(4)
         ]).saveToCassandra(self.keyspace, 'test_93')

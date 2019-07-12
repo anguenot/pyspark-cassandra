@@ -15,7 +15,7 @@ from collections import Set, Iterable, Mapping
 from datetime import datetime
 from time import mktime
 
-from pyspark_cassandra.types import UDT
+from .types import UDT
 
 
 def as_java_array(gateway, java_type, iterable):
