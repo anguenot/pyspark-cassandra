@@ -21,10 +21,10 @@ import inspect
 
 import pyspark.rdd
 
-from .conf import WriteConf
+from .conf import ReadConf, WriteConf
 from .context import CassandraSparkContext, monkey_patch_sc
 from .rdd import RowFormat
-from .rdd import saveToCassandra, joinWithCassandraTable, deleteFromCassandra
+from .rdd import deleteFromCassandra, joinWithCassandraTable, saveToCassandra
 from .types import Row, UDT
 
 __all__ = [

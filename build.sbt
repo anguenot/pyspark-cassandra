@@ -6,7 +6,7 @@ version := io.Source.fromFile("version.txt").mkString.trim
 
 organization := "anguenot"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.12"
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
 

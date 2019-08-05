@@ -2,6 +2,8 @@ SHELL = /bin/bash
 VERSION = $(shell cat version.txt)
 SCALA_TARGET_VERSION=2.11
 CASSANDRA_VERSION ?= 3.11.4
+PYTHON=python3
+PIP=pip3
 all:;: '$(CASSANDRA_VERSION)'
 
 .PHONY: clean clean-pyc clean-dist dist test-travis
@@ -23,13 +25,16 @@ clean-dist:
 	rm -rf venv
 
 install-venv:
-	test -d venv || virtualenv venv --python=python2.7
-	
+	test -d venv || virtualenv venv --python=$(PYTHON)
+	. venv/bin/activate
+	venv/bin/$(PIP) install -r python/requirements.txt
+	venv/bin/$(PIP) install -r python/requirements_dev.txt
+
 install-cassandra-driver: install-venv
-	venv/bin/pip install cassandra-driver
+	venv/bin/$(PIP) install cassandra-driver
 	
 install-ccm: install-venv
-	venv/bin/pip install ccm
+	venv/bin/$(PIP) install ccm
 
 start-cassandra: install-ccm	
 	mkdir -p .ccm
@@ -76,7 +81,7 @@ define test-integration-for-version
 			--conf spark.cassandra.connection.host="localhost" \
 			--jars target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra-assembly-$(VERSION).jar \
 			--py-files target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra-assembly-$(VERSION).jar \
-			python/pyspark_cassandra/tests.py
+			python/tests.py
 			
 	echo ======================================================================
 endef

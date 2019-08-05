@@ -17,10 +17,10 @@ from operator import itemgetter
 
 from pyspark.rdd import RDD
 
-from pyspark_cassandra.conf import ReadConf, WriteConf
-from pyspark_cassandra.format import ColumnSelector, RowFormat
-from pyspark_cassandra.types import Row
-from pyspark_cassandra.util import as_java_array, as_java_object, helper
+from .conf import ReadConf, WriteConf
+from .format import ColumnSelector, RowFormat
+from .types import Row
+from .util import as_java_array, as_java_object, helper
 
 if sys.version_info > (3,):
     long = int  # @ReservedAssignment
