@@ -2,8 +2,8 @@
 CHANGES
 =======
 
-2.4.0 (unreleased)
--------------------
+2.4.0 (2018-08-06)
+------------------
 * Python3 support for development / tests. Deprecate Python 2.7
 * Support for Spark 2.4.x
 
