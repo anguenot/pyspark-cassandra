@@ -15,13 +15,13 @@ import sys
 import time
 import unittest
 import uuid
+import warnings
 from _functools import partial
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from itertools import chain
 from uuid import UUID
 
-import pyspark_cassandra.streaming
 from cassandra import ConsistencyLevel
 from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
@@ -29,14 +29,40 @@ from math import sqrt
 from pyspark import SparkConf
 from pyspark.accumulators import AddingAccumulatorParam
 from pyspark.streaming.context import StreamingContext
-from pyspark_cassandra.conf import ReadConf, WriteConf
 
 import pyspark_cassandra
+import pyspark_cassandra.streaming
 from pyspark_cassandra import CassandraSparkContext, Row, RowFormat, UDT
+from pyspark_cassandra.conf import ReadConf, WriteConf
 
 
 class CassandraTestCase(unittest.TestCase):
+
     keyspace = "test_pyspark_cassandra"
+
+    def setUp(self):
+        if not sys.warnoptions:
+            warnings.simplefilter("ignore", ResourceWarning)
+
+    @classmethod
+    def setUpClass(cls):
+
+        # connect to cassandra and create a keyspace for testing
+        cls.session = Cluster().connect()
+        cls.session.execute('''
+            CREATE KEYSPACE IF NOT EXISTS %s WITH
+            replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+        ''' % (cls.keyspace,))
+        cls.session.set_keyspace(CassandraTestCase.keyspace)
+
+        # create a cassandra spark context
+        cls.sc = CassandraSparkContext(
+            conf=SparkConf().setAppName("PySpark Cassandra Test"))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.sc.stop()
+        cls.session.shutdown()
 
     def rdd(self, keyspace=None, table=None, key=None, column=None, **kwargs):
         keyspace = keyspace or getattr(self, 'keyspace', None)
@@ -982,27 +1008,4 @@ class RegressionTest(CassandraTestCase):
 
 
 if __name__ == '__main__':
-    try:
-        # connect to cassandra and create a keyspace for testing
-        CassandraTestCase.session = Cluster().connect()
-        CassandraTestCase.session.execute('''
-            CREATE KEYSPACE IF NOT EXISTS %s WITH
-            replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
-        ''' % (CassandraTestCase.keyspace,))
-        CassandraTestCase.session.set_keyspace(CassandraTestCase.keyspace)
-
-        # create a cassandra spark context
-        CassandraTestCase.sc = CassandraSparkContext(
-            conf=SparkConf().setAppName("PySpark Cassandra Test"))
-
-        # perform the unit tests
-        unittest.main()
-        # suite = unittest.TestLoader().loadTestsFromTestCase(RegressionTest)
-        # unittest.TextTestRunner().run(suite)
-    finally:
-        # stop the spark context and cassandra session
-        # stop the spark context and cassandra session
-        if hasattr(CassandraTestCase, 'sc'):
-            CassandraTestCase.sc.stop()
-        if hasattr(CassandraTestCase, 'session'):
-            CassandraTestCase.session.shutdown()
+    unittest.main()
