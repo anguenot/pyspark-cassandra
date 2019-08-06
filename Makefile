@@ -57,13 +57,13 @@ test-integration-teardown: stop-cassandra
 	
 test-integration-matrix: \
 	install-cassandra-driver \
-	test-integration-spark-2.3.3
+	test-integration-spark-2.4.3
 
 test-travis: install-cassandra-driver
 	$(call test-integration-for-version,$$SPARK_VERSION,$$SPARK_PACKAGE_TYPE)
 
-test-integration-spark-2.3.3:
-	$(call test-integration-for-version,2.3.3,hadoop2.7)
+test-integration-spark-2.4.3:
+	$(call test-integration-for-version,2.4.3,hadoop2.7)
 
 define test-integration-for-version
 	echo ======================================================================
@@ -118,3 +118,11 @@ python-tox: ## check style with flake8
 
 scala-style: ## check style with scalastyle
 	sbt -batch scalastyle
+
+release-staging: clean ## package and upload a release to staging PyPi
+	cd python && $(PYTHON) setup.py sdist bdist_wheel
+	cd python && twine upload dist/* -r staging
+
+release-prod: clean ## package and upload a release to prod PyPi
+	cd python && $(PYTHON) setup.py sdist bdist_wheel
+	cd python && twine upload dist/* -r prod
