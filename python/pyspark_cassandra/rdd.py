@@ -17,7 +17,7 @@ from operator import itemgetter
 
 from pyspark.rdd import RDD
 
-from .conf import ReadConf, WriteConf
+from .conf import ReadConf, WriteConf, ConnectionConf
 from .format import ColumnSelector, RowFormat
 from .types import Row
 from .util import as_java_array, as_java_object, helper
@@ -311,7 +311,7 @@ class _CassandraRDD(RDD):
 
 
 class CassandraTableScanRDD(_CassandraRDD):
-    def __init__(self, ctx, keyspace, table, row_format=None, read_conf=None,
+    def __init__(self, ctx, keyspace, table, row_format=None, read_conf=None, connection_config=None,
                  **read_conf_kwargs):
         super(CassandraTableScanRDD, self).__init__(ctx, keyspace, table,
                                                     row_format, read_conf,
@@ -321,8 +321,13 @@ class CassandraTableScanRDD(_CassandraRDD):
 
         read_conf = as_java_object(ctx._gateway, self.read_conf.settings())
 
-        self.crdd = self._helper \
-            .cassandraTable(ctx._jsc, keyspace, table, read_conf)
+        if connection_config:
+            conn_conf = as_java_object(ctx._gateway, ConnectionConf.build(**connection_config).settings())
+            self.crdd = self._helper \
+                            .cassandraTable(ctx._jsc, keyspace, table, read_conf, conn_conf)
+        else:
+            self.crdd = self._helper \
+                .cassandraTable(ctx._jsc, keyspace, table, read_conf)
 
     def by_primary_key(self):
         return self.key_by(primary_key=True)

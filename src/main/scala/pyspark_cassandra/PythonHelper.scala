@@ -18,6 +18,7 @@ import java.lang.Boolean
 import java.util.{Map => JMap}
 
 import com.datastax.spark.connector._
+import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.rdd._
 import com.datastax.spark.connector.streaming.toDStreamFunctions
 import com.datastax.spark.connector.types.TypeConverter
@@ -41,6 +42,13 @@ class PythonHelper() extends Serializable {
   def cassandraTable(jsc: JavaSparkContext, keyspace: String, table: String, readConf: JMap[String, Any]) = {
     val conf = parseReadConf(jsc.sc, Some(readConf))
     implicit val rrf = new DeferringRowReaderFactory()
+    jsc.sc.cassandraTable(keyspace, table).withReadConf(conf)
+  }
+
+  def cassandraTable(jsc: JavaSparkContext, keyspace: String, table: String, readConf: JMap[String, Any], conConf: JMap[String, String]) = {
+    val conf = parseReadConf(jsc.sc, Some(readConf))
+    implicit val rrf = new DeferringRowReaderFactory()
+    implicit val connector = CassandraConnector(jsc.sc.getConf.set("spark.cassandra.connection.host", conConf.get("spark_cassandra_connection_host")))
     jsc.sc.cassandraTable(keyspace, table).withReadConf(conf)
   }
 

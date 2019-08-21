@@ -34,6 +34,9 @@ class _Conf(object):
             ', '.join('%s=%s' % (k, v) for k, v in self.settings().items())
         )
 
+class ConnectionConf(_Conf):
+    def __init__(self, spark_cassandra_connection_host):
+        self.spark_cassandra_connection_host = spark_cassandra_connection_host
 
 class ReadConf(_Conf):
     def __init__(self, split_count=None, split_size=None, fetch_size=None,
