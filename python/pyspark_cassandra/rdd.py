@@ -140,6 +140,8 @@ def deleteFromCassandra(rdd, keyspace=None, table=None, deleteColumns=None,
 
         @param write_conf(WriteConf):
             A WriteConf object to use when saving to Cassandra
+        @param connection_config(ConnectionConf)
+            A ConnectionConf object to use when saving to non-default Cassandra cluster
         @param **write_conf_kwargs:
             WriteConf parameters to use when saving to Cassandra
     """
@@ -431,6 +433,8 @@ def joinWithCassandraTable(left_rdd, keyspace, table, connection_config=None):
             The keyspace to join on
         @param table(string):
             The CQL table to join on.
+        @param connection_config(ConnectionConf)
+            A ConnectionConf object to use when saving to non-default Cassandra cluster
     """
     return CassandraJoinRDD(left_rdd, keyspace, table, connection_config)
 
