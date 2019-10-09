@@ -93,6 +93,7 @@ object Utils {
             case ("parallelism_level", v: Int) => conf = conf.copy(parallelismLevel = v)
             case ("throughput_mibps", v: Number) => conf = conf.copy(throughputMiBPS = v.doubleValue())
             case ("ttl", v: Int) => conf = conf.copy(ttl = TTLOption.constant(v))
+            case ("ttl", v: String) => conf = conf.copy(ttl = TTLOption.perRow(v))
             case ("timestamp", v: Number) => conf = conf.copy(timestamp = TimestampOption.constant(v.longValue()))
             case ("metrics_enabled", v: Boolean) => conf = conf.copy(taskMetricsEnabled = v)
             case _ => throw new IllegalArgumentException(s"Write conf key $k with value $v unsupported")

@@ -79,8 +79,9 @@ class WriteConf(_Conf):
                 If None defaults to 8 or
                 spark.cassandra.output.concurrent.writes if set.
             @param throughput_mibps(int):
-            @param ttl(int or timedelta):
+            @param ttl(int or timedelta or str):
                 The time to live as seconds or timedelta to use for the values.
+                This parameter can also take a column name (str) to set ttl per row.
                 If None given no TTL is used.
             @param timestamp(int, date or datetime):
                 The timestamp in microseconds, date or datetime to use for the
