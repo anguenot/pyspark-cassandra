@@ -54,7 +54,7 @@ class WriteConf(_Conf):
                  batch_grouping_key=None,
                  consistency_level=None, parallelism_level=None,
                  throughput_mibps=None, ttl=None,
-                 timestamp=None, metrics_enabled=None):
+                 timestamp=None, metrics_enabled=None, ignore_nulls=None):
         """
             @param batch_size(int):
                 The size in bytes to batch up in an unlogged batch of CQL
@@ -88,6 +88,8 @@ class WriteConf(_Conf):
                 If None given the Cassandra nodes determine the timestamp.
             @param metrics_enabled(bool):
                 Whether to enable task metrics updates.
+            @param ignore_nulls(bool):
+                Whether to ignore nulls when upserting null values
         """
         self.batch_size = batch_size
         self.batch_buffer_size = batch_buffer_size
@@ -112,3 +114,4 @@ class WriteConf(_Conf):
         self.timestamp = timestamp
 
         self.metrics_enabled = metrics_enabled
+        self.ignore_nulls = ignore_nulls

@@ -95,6 +95,7 @@ object Utils {
             case ("ttl", v: Int) => conf = conf.copy(ttl = TTLOption.constant(v))
             case ("timestamp", v: Number) => conf = conf.copy(timestamp = TimestampOption.constant(v.longValue()))
             case ("metrics_enabled", v: Boolean) => conf = conf.copy(taskMetricsEnabled = v)
+            case ("ignore_nulls", v: Boolean) => conf = conf.copy(ignoreNulls = v)
             case _ => throw new IllegalArgumentException(s"Write conf key $k with value $v unsupported")
           }
         }
