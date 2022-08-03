@@ -2,6 +2,10 @@
 CHANGES
 =======
 
+2.4.1 (2022-08-03)
+------------------
+* add ignoreNulls option to WriteConf (#57)
+
 2.4.0 (2018-08-06)
 ------------------
 * Python3 support for development / tests. Deprecate Python 2.7
