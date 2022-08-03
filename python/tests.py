@@ -576,6 +576,7 @@ class ConfTest(SimpleTypesTestBase):
         save(timestamp=datetime.now())
         save(metrics_enabled=True)
         save(write_conf=WriteConf(ttl=3, metrics_enabled=True))
+        save(ignore_nulls=True)
 
 
 class StreamingTest(SimpleTypesTestBase):
