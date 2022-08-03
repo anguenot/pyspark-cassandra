@@ -5,6 +5,11 @@ CHANGES
 2.4.1 (2022-08-03)
 ------------------
 * add ignoreNulls option to WriteConf (#57)
+* added ability to set ttl per row passing a column name (#52)
+* Build using Python 3.7
+* Spark 2.4.8 support.
+* Update Spark Cassandra driver to 2.4.2
+* Test against Cassandra 3.11.8
 
 2.4.0 (2018-08-06)
 ------------------

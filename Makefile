@@ -1,8 +1,8 @@
 SHELL = /bin/bash
 VERSION = $(shell cat version.txt)
 SCALA_TARGET_VERSION=2.11
-CASSANDRA_VERSION ?= 3.11.4
-PYTHON=python3
+CASSANDRA_VERSION ?= 3.11.13
+PYTHON=python3.7
 PIP=pip3
 all:;: '$(CASSANDRA_VERSION)'
 
@@ -57,13 +57,13 @@ test-integration-teardown: stop-cassandra
 	
 test-integration-matrix: \
 	install-cassandra-driver \
-	test-integration-spark-2.4.3
+	test-integration-spark-2.4.8
 
 test-travis: install-cassandra-driver
 	$(call test-integration-for-version,$$SPARK_VERSION,$$SPARK_PACKAGE_TYPE)
 
-test-integration-spark-2.4.3:
-	$(call test-integration-for-version,2.4.3,hadoop2.7)
+test-integration-spark-2.4.8:
+	$(call test-integration-for-version,2.4.8,hadoop2.7)
 
 define test-integration-for-version
 	echo ======================================================================
