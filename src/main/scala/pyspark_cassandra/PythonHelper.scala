@@ -18,6 +18,7 @@ import java.lang.Boolean
 import java.util.{Map => JMap}
 
 import com.datastax.spark.connector._
+import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.spark.connector.rdd._
 import com.datastax.spark.connector.streaming.toDStreamFunctions
 import com.datastax.spark.connector.types.TypeConverter
@@ -41,6 +42,13 @@ class PythonHelper() extends Serializable {
   def cassandraTable(jsc: JavaSparkContext, keyspace: String, table: String, readConf: JMap[String, Any]) = {
     val conf = parseReadConf(jsc.sc, Some(readConf))
     implicit val rrf = new DeferringRowReaderFactory()
+    jsc.sc.cassandraTable(keyspace, table).withReadConf(conf)
+  }
+
+  def cassandraTable(jsc: JavaSparkContext, keyspace: String, table: String, readConf: JMap[String, Any], conConf: JMap[String, String]) = {
+    val conf = parseReadConf(jsc.sc, Some(readConf))
+    implicit val rrf = new DeferringRowReaderFactory()
+    implicit val connector = CassandraConnector(jsc.sc.getConf.set("spark.cassandra.connection.host", conConf.get("spark_cassandra_connection_host")))
     jsc.sc.cassandraTable(keyspace, table).withReadConf(conf)
   }
 
@@ -106,6 +114,45 @@ class PythonHelper() extends Serializable {
     dstream.dstream.unpickle().saveToCassandra(keyspace, table, selectedColumns, conf)
   }
 
+  /* custom cluster -------------------------------------------------------- */
+  /* rdds ------------------------------------------------------------------ */
+  def saveToCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String, columns: JMap[String, String],
+                      rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any], conConf: JMap[String, String]) = {
+
+    val selectedColumns = columnSelector(columns)
+    val conf = parseWriteConf(Some(writeConf))
+
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    implicit val connector = CassandraConnector(rdd.sparkContext.getConf.set("spark.cassandra.connection.host",
+      conConf.get("spark_cassandra_connection_host")))
+    rdd.rdd.unpickle().saveToCassandra(keyspace, table, selectedColumns, conf)
+  }
+
+  def saveToCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String, columns: Array[String],
+                      rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any], conConf: JMap[String, String]) = {
+
+    val selectedColumns = columnSelector(columns)
+    val conf = parseWriteConf(Some(writeConf))
+
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    implicit val connector = CassandraConnector(rdd.sparkContext.getConf.set("spark.cassandra.connection.host",
+      conConf.get("spark_cassandra_connection_host")))
+    rdd.rdd.unpickle().saveToCassandra(keyspace, table, selectedColumns, conf)
+  }
+
+  /* dstreams -------------------------------------------------------------- */
+  def saveToCassandra(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String, columns: Array[String],
+                      rowFormat: Integer, keyed: Boolean, writeConf: JMap[String, Any], conConf: JMap[String, String]) = {
+
+    val selectedColumns = columnSelector(columns)
+    val conf = parseWriteConf(Some(writeConf))
+
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    implicit val connector = CassandraConnector(dstream.context().sparkContext.getConf.set("spark.cassandra.connection.host",
+      conConf.get("spark_cassandra_connection_host")))
+    dstream.dstream.unpickle().saveToCassandra(keyspace, table, selectedColumns, conf)
+  }
+
   /* ----------------------------------------------------------------------- */
   /* join with cassandra tables -------------------------------------------- */
   /* ----------------------------------------------------------------------- */
@@ -115,6 +162,15 @@ class PythonHelper() extends Serializable {
   def joinWithCassandraTable(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String): CassandraJoinRDD[Any, UnreadRow] = {
     implicit val rwf = new GenericRowWriterFactory(None, None)
     implicit val rrf = new DeferringRowReaderFactory()
+    rdd.rdd.unpickle().joinWithCassandraTable(keyspace, table)
+  }
+
+
+  def joinWithCassandraTable(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String,  conConf: JMap[String, String]): CassandraJoinRDD[Any, UnreadRow] = {
+    implicit val rwf = new GenericRowWriterFactory(None, None)
+    implicit val rrf = new DeferringRowReaderFactory()
+    implicit val connector = CassandraConnector(rdd.sparkContext.getConf.set("spark.cassandra.connection.host",
+      conConf.get("spark_cassandra_connection_host")))
     rdd.rdd.unpickle().joinWithCassandraTable(keyspace, table)
   }
 
@@ -133,6 +189,17 @@ class PythonHelper() extends Serializable {
     dstream.dstream.unpickle().joinWithCassandraTable(keyspace, table, columns, joinOn)
   }
 
+
+  def joinWithCassandraTable(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String,
+                             selectedColumns: Array[String], joinColumns: Array[String], conConf: JMap[String, String]): DStream[(Any, UnreadRow)] = {
+    val columns = columnSelector(selectedColumns)
+    val joinOn = columnSelector(joinColumns, PartitionKeyColumns)
+    implicit val rwf = new GenericRowWriterFactory(None, None)
+    implicit val rrf = new DeferringRowReaderFactory()
+    implicit val connector = CassandraConnector(dstream.context().sparkContext.getConf.set("spark.cassandra.connection.host",
+      conConf.get("spark_cassandra_connection_host")))
+    dstream.dstream.unpickle().joinWithCassandraTable(keyspace, table, columns, joinOn)
+  }
   /* ----------------------------------------------------------------------- */
   /* delete from cassandra --------------------------------------------------*/
   /* ----------------------------------------------------------------------- */
@@ -150,6 +217,20 @@ class PythonHelper() extends Serializable {
     rdd.rdd.unpickle().deleteFromCassandra(keyspace, table, deletes, keys, conf)
   }
 
+  def deleteFromCassandra(rdd: JavaRDD[Array[Byte]], keyspace: String, table: String,
+                          deleteColumns: Array[String], keyColumns: Array[String],
+                          rowFormat: Integer, keyed: Boolean,
+                          writeConf: JMap[String, Any],
+                          conConf: JMap[String, String]) = {
+    val deletes = columnSelector(deleteColumns, SomeColumns())
+    val keys = columnSelector(keyColumns, PrimaryKeyColumns)
+    val conf = parseWriteConf(Some(writeConf))
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    implicit val connector = CassandraConnector(rdd.sparkContext.getConf.set("spark.cassandra.connection.host",
+      conConf.get("spark_cassandra_connection_host")))
+    rdd.rdd.unpickle().deleteFromCassandra(keyspace, table, deletes, keys, conf)
+  }
+
   /* dstreams ------------------------------------------------------------------ */
 
   def deleteFromCassandra(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String,
@@ -160,6 +241,20 @@ class PythonHelper() extends Serializable {
     val keys = columnSelector(keyColumns, PrimaryKeyColumns)
     val conf = parseWriteConf(Some(writeConf))
     implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    dstream.dstream.unpickle().deleteFromCassandra(keyspace, table, deletes, keys, conf)
+  }
+
+  def deleteFromCassandra(dstream: JavaDStream[Array[Byte]], keyspace: String, table: String,
+                          deleteColumns: Array[String], keyColumns: Array[String],
+                          rowFormat: Integer, keyed: Boolean,
+                          writeConf: JMap[String, Any],
+                          conConf: JMap[String, String]) = {
+    val deletes = columnSelector(deleteColumns, SomeColumns())
+    val keys = columnSelector(keyColumns, PrimaryKeyColumns)
+    val conf = parseWriteConf(Some(writeConf))
+    implicit val rwf = new GenericRowWriterFactory(Format(rowFormat), asBooleanOption(keyed))
+    implicit val connector = CassandraConnector(dstream.context().sparkContext.getConf.set("spark.cassandra.connection.host",
+      conConf.get("spark_cassandra_connection_host")))
     dstream.dstream.unpickle().deleteFromCassandra(keyspace, table, deletes, keys, conf)
   }
 

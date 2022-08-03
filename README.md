@@ -203,6 +203,7 @@ for more details. *But* it exposes one additional method:
   * `split_size` sets the size in the number of CQL rows in each partition (defaults to `100000`)
   * `fetch_size` sets the number of rows to fetch per request from Cassandra (defaults to `1000`)
   * `consistency_level` sets with which consistency level to read the data (defaults to `LOCAL_ONE`)
+  * `connection_config` map with connection information that can be used to connect non-default cluster (defaults to None)
 
 
 ### pyspark.RDD
@@ -311,6 +312,15 @@ sc \
 	.collect()
 ```
 
+Reading from different clusters::
+```python
+rdd_one = sc \
+	.cassandraTable("keyspace", "table_one", connection_config={"spark_cassandra_connection_host": "cas-1"})
+
+rdd_two = sc \
+	.cassandraTable("keyspace", "table_two", connection_config={"spark_cassandra_connection_host": "cas-2"})
+```
+
 Storing data in Cassandra::
 
 ```python
@@ -329,6 +339,14 @@ rdd.saveToCassandra(
 	"keyspace",
 	"table",
 	ttl=timedelta(hours=1),
+)
+
+# Storing to non-default cluster
+rdd.saveToCassandra(
+	"keyspace",
+	"table",
+	ttl=timedelta(hours=1),
+    connection_config={"spark_cassandra_connection_host": "cas-2"}
 )
 ```
 

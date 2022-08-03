@@ -9,18 +9,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from functools import partial
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 from pyspark.streaming.dstream import DStream
 
-from pyspark_cassandra.conf import WriteConf
+from pyspark_cassandra.conf import WriteConf, ConnectionConf
 from pyspark_cassandra.util import as_java_object, as_java_array
 from pyspark_cassandra.util import helper
 
 
 def saveToCassandra(dstream, keyspace, table, columns=None, row_format=None,
                     keyed=None,
-                    write_conf=None, **write_conf_kwargs):
+                    write_conf=None, connection_config=None, **write_conf_kwargs):
     ctx = dstream._ssc._sc
     gw = ctx._gateway
 
@@ -30,14 +30,20 @@ def saveToCassandra(dstream, keyspace, table, columns=None, row_format=None,
     # convert the columns to a string array
     columns = as_java_array(gw, "String", columns) if columns else None
 
-    return helper(ctx).saveToCassandra(dstream._jdstream, keyspace, table,
-                                       columns, row_format,
-                                       keyed, write_conf)
+    fn_save = partial(helper(ctx).saveToCassandra, dstream._jdstream, keyspace, table,
+                      columns, row_format,
+                      keyed, write_conf)
+
+    if connection_config:
+        conn_conf = as_java_object(ctx._gateway, ConnectionConf.build(**connection_config).settings())
+        fn_save = partial(fn_save, conn_conf)
+
+    return fn_save()
 
 
 def deleteFromCassandra(dstream, keyspace=None, table=None, deleteColumns=None,
                         keyColumns=None,
-                        row_format=None, keyed=None, write_conf=None,
+                        row_format=None, keyed=None, write_conf=None, connection_config=None,
                         **write_conf_kwargs):
     """Delete data from Cassandra table, using data from the RDD as primary
     keys. Uses the specified column names.
@@ -86,15 +92,19 @@ def deleteFromCassandra(dstream, keyspace=None, table=None, deleteColumns=None,
                                   deleteColumns) if deleteColumns else None
     keyColumns = as_java_array(gw, "String", keyColumns) \
         if keyColumns else None
+    fn_delete = partial(helper(ctx).deleteFromCassandra, dstream._jdstream, keyspace, table,
+                        deleteColumns, keyColumns,
+                        row_format,
+                        keyed, write_conf)
+    if connection_config:
+        conn_conf = as_java_object(ctx._gateway, ConnectionConf.build(**connection_config).settings())
+        fn_delete = partial(fn_delete, conn_conf)
 
-    return helper(ctx).deleteFromCassandra(dstream._jdstream, keyspace, table,
-                                           deleteColumns, keyColumns,
-                                           row_format,
-                                           keyed, write_conf)
+    return fn_delete()
 
 
 def joinWithCassandraTable(dstream, keyspace, table, selected_columns=None,
-                           join_columns=None):
+                           join_columns=None, connection_config=None):
     """Joins a DStream (a stream of RDDs) with a Cassandra table
 
     Arguments:
@@ -121,9 +131,13 @@ def joinWithCassandraTable(dstream, keyspace, table, selected_columns=None,
                                  join_columns) if join_columns else None
 
     h = helper(ctx)
-    dstream = h.joinWithCassandraTable(dstream._jdstream, keyspace, table,
-                                       selected_columns,
-                                       join_columns)
+    fn_read_join = partial(h.joinWithCassandraTable, dstream._jdstream, keyspace, table,
+                           selected_columns,
+                           join_columns)
+    if connection_config:
+        conn_conf = as_java_object(ctx._gateway, ConnectionConf.build(**connection_config).settings())
+        fn_read_join = partial(fn_read_join, conn_conf)
+    dstream = fn_read_join()
     dstream = h.pickleRows(dstream)
     dstream = h.javaDStream(dstream)
 
