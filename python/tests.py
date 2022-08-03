@@ -572,6 +572,7 @@ class ConfTest(SimpleTypesTestBase):
         save(throughput_mibps=10)
         save(ttl=5)
         save(ttl=timedelta(minutes=30))
+        save(ttl='int')
         save(timestamp=time.clock() * 1000 * 1000)
         save(timestamp=datetime.now())
         save(metrics_enabled=True)
