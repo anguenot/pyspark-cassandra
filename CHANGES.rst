@@ -6,6 +6,7 @@ CHANGES
 ------------------
 * add ignoreNulls option to WriteConf (#57)
 * added ability to set ttl per row passing a column name (#52)
+* multi cluster access (#50)
 * Build using Python 3.7
 * Spark 2.4.8 support.
 * Update Spark Cassandra driver to 2.4.2
