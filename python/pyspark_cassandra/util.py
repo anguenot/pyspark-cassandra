@@ -11,7 +11,7 @@
 # limitations under the License.
 
 
-from collections import Set, Iterable, Mapping
+from collections.abc import Set, Iterable, Mapping
 from datetime import datetime
 from time import mktime
 

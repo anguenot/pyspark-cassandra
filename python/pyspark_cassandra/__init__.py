@@ -17,7 +17,9 @@
     https://github.com/datastax/spark-cassandra-connector.
 """
 
+import glob
 import inspect
+import os
 
 import pyspark.rdd
 
@@ -32,10 +34,18 @@ __all__ = [
     "ReadConf",
     "Row",
     "RowFormat",
-    "streaming",
     "UDT",
-    "WriteConf"
+    "WriteConf",
+    "jar_path",
 ]
+
+
+def jar_path():
+    """Returns the path to the bundled assembly JAR, or None if not found."""
+    jars_dir = os.path.join(os.path.dirname(__file__), 'jars')
+    jars = glob.glob(os.path.join(jars_dir, '*.jar'))
+    return jars[0] if jars else None
+
 
 # Monkey patch the default python RDD so that it can be stored to Cassandra as
 # CQL rows
@@ -43,6 +53,14 @@ __all__ = [
 pyspark.rdd.RDD.saveToCassandra = saveToCassandra
 pyspark.rdd.RDD.joinWithCassandraTable = joinWithCassandraTable
 pyspark.rdd.RDD.deleteFromCassandra = deleteFromCassandra
+
+# Auto-add the bundled JAR to an active SparkContext if one exists
+_jar = jar_path()
+if _jar:
+    from pyspark import SparkContext
+    _sc = SparkContext._active_spark_context
+    if _sc is not None:
+        _sc.addJar(_jar)
 
 # Monkey patch the sc variable in the caller if any
 frame = inspect.currentframe().f_back
@@ -58,4 +76,4 @@ for _ in range(10):
 
 __author__ = 'Julien Anguenot'
 __email__ = 'julien@anguenot.org'
-__version__ = '2.4.1'
+__version__ = '3.5.0'

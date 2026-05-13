@@ -25,3 +25,6 @@ pyspark-cassandra.iml
 src/main/scala/scala.iml
 /.tox/
 python/dist
+/.python-version
+/.bsp/
+python/pyspark_cassandra/jars/*.jar

@@ -2,6 +2,24 @@
 CHANGES
 =======
 
+3.5.0 (2025-05-13)
+------------------
+* Spark 3.5.5 support
+* Scala 2.12.18
+* Java 17
+* spark-cassandra-connector 3.5.1
+* Pyrolite 5.1
+* SBT 1.10.11
+* Python 3.9+ (drop Python 2.7 and 3.4-3.8)
+* Test against Cassandra 4.1.7
+* Pip-installable wheel with bundled assembly JAR (no more --packages needed)
+* Auto-add bundled JAR to active SparkContext on import
+* Remove DStream/streaming support (removed upstream in connector 3.x)
+* Remove Travis CI configuration
+* Remove Spark Packages publishing (deprecated)
+* Add pyproject.toml for modern build system
+* Pin CCM to known-good commit for test infrastructure
+
 2.4.1 (2022-08-03)
 ------------------
 * add ignoreNulls option to WriteConf (#57)

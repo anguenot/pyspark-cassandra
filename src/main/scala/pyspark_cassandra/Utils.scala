@@ -16,20 +16,20 @@ package pyspark_cassandra
 
 import java.util.{Map => JMap}
 
-import com.datastax.driver.core.ConsistencyLevel
+import com.datastax.oss.driver.api.core.DefaultConsistencyLevel
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.rdd._
 import com.datastax.spark.connector.writer._
 import org.apache.spark.SparkContext
 
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 
 object Utils {
 
   def columnSelector(columns: JMap[String, String]) = {
 
-    if (columns != null && ! columns.isEmpty()) {
-      SomeColumns(mapAsScalaMap(columns).toList.map(entry => (entry._1, entry._2) match {
+    if (columns != null && !columns.isEmpty()) {
+      SomeColumns(columns.asScala.toList.map(entry => (entry._1, entry._2) match {
         case (key, "append") => CollectionColumnName(key, None, CollectionAppend)
         case (key, "add") => CollectionColumnName(key, None, CollectionAppend)
         case (key, "overwrite") => CollectionColumnName(key, None, CollectionOverwrite)
@@ -60,13 +60,13 @@ object Utils {
 
     readConf match {
       case Some(rc) =>
-        for {(k, v) <- rc} {
+        for {(k, v) <- rc.asScala} {
           (k, v) match {
             case ("split_count", v: Int) => conf = conf.copy(splitCount = Option(v))
             case ("split_size", v: Int) => conf = conf.copy(splitSizeInMB = v)
             case ("fetch_size", v: Int) => conf = conf.copy(fetchSizeInRows = v)
-            case ("consistency_level", v: Int) => conf = conf.copy(consistencyLevel = ConsistencyLevel.values()(v))
-            case ("consistency_level", v) => conf = conf.copy(consistencyLevel = ConsistencyLevel.valueOf(v.toString))
+            case ("consistency_level", v: Int) => conf = conf.copy(consistencyLevel = DefaultConsistencyLevel.values()(v))
+            case ("consistency_level", v) => conf = conf.copy(consistencyLevel = DefaultConsistencyLevel.valueOf(v.toString))
             case ("metrics_enabled", v: Boolean) => conf = conf.copy(taskMetricsEnabled = v)
             case _ => throw new IllegalArgumentException(s"Read conf key $k with value $v unsupported")
           }
@@ -82,16 +82,16 @@ object Utils {
 
     writeConf match {
       case Some(wc) =>
-        for {(k, v) <- wc} {
+        for {(k, v) <- wc.asScala} {
           (k, v) match {
             case ("batch_size", v: Int) => conf = conf.copy(batchSize = BytesInBatch(v))
             case ("batch_buffer_size", v: Int) => conf = conf.copy(batchGroupingBufferSize = v)
             case ("batch_grouping_key", "replica_set") => conf = conf.copy(batchGroupingKey = BatchGroupingKey.ReplicaSet)
             case ("batch_grouping_key", "partition") => conf = conf.copy(batchGroupingKey = BatchGroupingKey.ReplicaSet)
-            case ("consistency_level", v: Int) => conf = conf.copy(consistencyLevel = ConsistencyLevel.values()(v))
-            case ("consistency_level", v) => conf = conf.copy(consistencyLevel = ConsistencyLevel.valueOf(v.toString))
+            case ("consistency_level", v: Int) => conf = conf.copy(consistencyLevel = DefaultConsistencyLevel.values()(v))
+            case ("consistency_level", v) => conf = conf.copy(consistencyLevel = DefaultConsistencyLevel.valueOf(v.toString))
             case ("parallelism_level", v: Int) => conf = conf.copy(parallelismLevel = v)
-            case ("throughput_mibps", v: Number) => conf = conf.copy(throughputMiBPS = v.doubleValue())
+            case ("throughput_mibps", v: Number) => conf = conf.copy(throughputMiBPS = Some(v.doubleValue()))
             case ("ttl", v: Int) => conf = conf.copy(ttl = TTLOption.constant(v))
             case ("ttl", v: String) => conf = conf.copy(ttl = TTLOption.perRow(v))
             case ("timestamp", v: Number) => conf = conf.copy(timestamp = TimestampOption.constant(v.longValue()))
@@ -137,20 +137,13 @@ object Format extends Enumeration {
   }
 
   def detect(row: Any) = {
-    // The detection works because primary keys can't be maps, sets or lists. If the detection still fails, a
-    // user must set the row_format explicitly
-
     row match {
-      // Rows map to ROW of course
       case row: Row => (Format.ROW, false)
 
-      // If the row is a map, the only possible format is DICT
       case row: Map[_, _] => (Format.DICT, false)
       case row: JMap[_, _] => (Format.DICT, false)
 
-      // otherwise it must be a tuple
       case row: Array[_] =>
-        // If the row is a tuple of length two, try to figure out if it's a (key,value) tuple
         if (row.length == 2) {
           val Array(k, v) = row
 
@@ -164,7 +157,6 @@ object Format extends Enumeration {
 
         (Format.TUPLE, false)
 
-      // or if we really can't figure it out, request the user to set it explicitly
       case _ =>
         val cls = row.getClass()
         throw new RuntimeException(s"Unable to detect or unsupported row format ($cls). Set it explicitly " +

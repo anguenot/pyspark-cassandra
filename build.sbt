@@ -6,38 +6,34 @@ version := io.Source.fromFile("version.txt").mkString.trim
 
 organization := "anguenot"
 
-scalaVersion := "2.11.12"
+scalaVersion := "2.12.18"
 
-credentials += Credentials(Path.userHome / ".ivy2" / ".sbtcredentials")
+credentials ++= {
+  val credFile = Path.userHome / ".ivy2" / ".sbtcredentials"
+  if (credFile.exists()) Seq(Credentials(credFile)) else Seq.empty
+}
 
 licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
 
+val sparkVersion = "3.5.5"
+
 libraryDependencies ++= Seq(
-  "com.datastax.spark" %% "spark-cassandra-connector" % "2.4.2",
-  "net.razorvine" % "pyrolite" % "4.30"
+  "com.datastax.spark" %% "spark-cassandra-connector" % "3.5.1",
+  "net.razorvine" % "pyrolite" % "5.1",
+  "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-sql" % sparkVersion % "provided"
 )
 
-spName := "anguenot/pyspark-cassandra"
+javacOptions ++= Seq("-source", "17", "-target", "17")
 
-sparkVersion := "2.4.8"
+scalacOptions ++= Seq("-unchecked", "-feature")
 
-sparkComponents ++= Seq("core", "streaming", "sql")
-javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+assembly / assemblyPackageScala / assemblyMergeStrategy := { _ => MergeStrategy.discard }
 
-assemblyOption in assembly := (assemblyOption in assembly).value.copy(
-  includeScala = false
-)
-
-spIgnoreProvided := true
-
-ivyScala := ivyScala.value map {
-  _.copy(overrideScalaVersion = true)
-}
-
-assemblyMergeStrategy in assembly := {
+assembly / assemblyMergeStrategy := {
   case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
   case PathList("META-INF", xs@_*) => MergeStrategy.last
   case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
 }

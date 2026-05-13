@@ -14,37 +14,32 @@
 
 package pyspark_cassandra
 
-import com.datastax.driver.core.DataType
+import com.datastax.oss.driver.api.core.`type`.{DataType, DataTypes}
 import com.datastax.spark.connector.{GettableData, toRDDFunctions}
 import org.apache.spark.rdd.RDD
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ArrayBuffer
 
 case class DataFrame(names: Array[String], types: Array[String], values: Seq[ArrayBuffer[Any]])
 
 object SpanBy {
   def binary(rdd: RDD[UnreadRow], columns: Array[String]) = {
-    // span by the given columns
     val spanned = rdd.spanBy { r => columns.map { c => r.row.getBytesUnsafe(c) } }
 
-    // deserialize the spans
     spanned.map {
       case (k, rows) => {
-        // get the columns for the data frame (so excluding the ones spanned by)
-        val colDefs = rows.head.row.getColumnDefinitions.asList()
+        val colDefs = rows.head.row.getColumnDefinitions.asScala.toSeq
         val colTypesWithIdx = colDefs.map {
           d => d.getType
         }.zipWithIndex.filter {
-          case (c, i) => columns.contains(c.getName)
+          case (c, i) => columns.contains(colDefs(i).getName.asCql(true))
         }
 
-        // deserialize the spanning key
         val deserializedKey = k.zipWithIndex.map {
           case (bb, i) => GettableData.get(rows.head.row, i)
         }
 
-        // transpose the rows in to columns and 'deserialize'
         val df = colDefs.map { x => new ArrayBuffer[Any] }
         for {
           row <- rows
@@ -53,21 +48,13 @@ object SpanBy {
           df(i) += deserialize(row, ct, i)
         }
 
-        // list the numpy types of the columns in the span (i.e. the non-key columns)
         val numpyTypes = colTypesWithIdx.map { case (c, i) => numpyType(c).getOrElse(null) }
 
-        // return the key and 'dataframe container'
         (deserializedKey, new DataFrame(columns, numpyTypes.toArray, df))
       }
     }
   }
 
-  /**
-    * 'Deserializes' a value of the given type _only if_ there is no binary representation possibly which can
-    * be converted into a numpy array. I.e. longs will _not_ actually be deserialized, but Strings or UUIDs
-    * will. If possible the value will be written out as a binary string for an entire column to be converted
-    * to Numpy arrays.
-    */
   private def deserialize(row: UnreadRow, dt: DataType, i: Int) = {
     if (binarySupport(dt)) {
       row.row.getBytesUnsafe(i)
@@ -76,7 +63,6 @@ object SpanBy {
     }
   }
 
-  /** Checks if a Cassandra type can be represented as a binary string. */
   private def binarySupport(dataType: DataType) = {
     numpyType(dataType) match {
       case Some(x) => true
@@ -84,16 +70,15 @@ object SpanBy {
     }
   }
 
-  /** Provides a Numpy type string for every Cassandra type supported. */
   private def numpyType(dataType: DataType) = {
-    Option(dataType.getName match {
-      case DataType.Name.BOOLEAN => ">b1"
-      case DataType.Name.INT => ">i4"
-      case DataType.Name.BIGINT => ">i8"
-      case DataType.Name.COUNTER => ">i8"
-      case DataType.Name.FLOAT => ">f4"
-      case DataType.Name.DOUBLE => ">f8"
-      case DataType.Name.TIMESTAMP => ">M8[ms]"
+    Option(dataType match {
+      case DataTypes.BOOLEAN => ">b1"
+      case DataTypes.INT => ">i4"
+      case DataTypes.BIGINT => ">i8"
+      case DataTypes.COUNTER => ">i8"
+      case DataTypes.FLOAT => ">f4"
+      case DataTypes.DOUBLE => ">f8"
+      case DataTypes.TIMESTAMP => ">M8[ms]"
       case _ => null
     })
   }

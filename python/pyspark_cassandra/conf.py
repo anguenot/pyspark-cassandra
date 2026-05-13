@@ -34,9 +34,11 @@ class _Conf(object):
             ', '.join('%s=%s' % (k, v) for k, v in self.settings().items())
         )
 
+
 class ConnectionConf(_Conf):
     def __init__(self, spark_cassandra_connection_host):
         self.spark_cassandra_connection_host = spark_cassandra_connection_host
+
 
 class ReadConf(_Conf):
     def __init__(self, split_count=None, split_size=None, fetch_size=None,
@@ -83,9 +85,9 @@ class WriteConf(_Conf):
                 spark.cassandra.output.concurrent.writes if set.
             @param throughput_mibps(int):
             @param ttl(int or timedelta or str):
-                The time to live as seconds or timedelta to use for the values.
-                This parameter can also take a column name (str) to set ttl per row.
-                If None given no TTL is used.
+                The time to live as seconds or timedelta to use for the
+                values. This can also take a column name (str) to set ttl
+                per row. If None given no TTL is used.
             @param timestamp(int, date or datetime):
                 The timestamp in microseconds, date or datetime to use for the
                 values.

@@ -18,19 +18,19 @@ import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.util.UUID
 
-import com.datastax.driver.core.{UDTValue => DriverUDTValue}
+import com.datastax.oss.driver.api.core.data.{UdtValue => DriverUdtValue}
 import com.datastax.spark.connector.UDTValue
 import com.datastax.spark.connector.types.TypeConverter
 import net.razorvine.pickle.{IObjectPickler, Opcodes, Pickler, Unpickler}
 import pyspark_util.Conversions._
 import pyspark_util.{Pickling => PicklingUtils, _}
 
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable.List
 import scala.reflect.runtime.universe.typeTag
 
 class Pickling extends PicklingUtils {
-  override def register() {
+  override def register(): Unit = {
     super.register()
 
     Unpickler.registerConstructor("pyspark.sql", "_create_row", PlainRowUnpickler)
@@ -39,7 +39,6 @@ class Pickling extends PicklingUtils {
 
     Pickler.registerCustomPickler(classOf[Row], PlainRowPickler)
     Pickler.registerCustomPickler(classOf[UDTValue], UDTValuePickler)
-    Pickler.registerCustomPickler(classOf[DriverUDTValue], DriverUDTValuePickler)
     Pickler.registerCustomPickler(classOf[DataFrame], DataFramePickler)
   }
 }
@@ -62,19 +61,6 @@ object UDTValuePickler extends StructPickler {
   def fields(o: Any) = o.asInstanceOf[UDTValue].columnNames
 
   def values(o: Any, fields: Seq[_]) = o.asInstanceOf[UDTValue].columnValues
-}
-
-object DriverUDTValuePickler extends StructPickler {
-  def creator = "pyspark_cassandra.types\n_create_udt\n"
-
-  def fields(o: Any) = o.asInstanceOf[DriverUDTValue].getType().getFieldNames().toSeq
-
-  def values(o: Any, fields: Seq[_]) = {
-    val v = o.asInstanceOf[DriverUDTValue]
-    v.getType().map {
-      field => v.getObject(field.getName)
-    }.toList
-  }
 }
 
 object UDTValueUnpickler extends StructUnpickler {

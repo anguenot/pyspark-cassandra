@@ -19,17 +19,15 @@ import java.math.BigInteger
 import java.net.{Inet4Address, Inet6Address, InetAddress}
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
+import java.time.LocalDate
 import java.util.{Collection, HashMap, UUID, Map => JMap, Date}
 
 import net.razorvine.pickle._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.dstream.DStream
 import pyspark_util.Conversions._
 
- import com.datastax.driver.core.LocalDate
-
-import scala.collection.JavaConversions._
-import scala.collection.convert.Wrappers.{JListWrapper, JMapWrapper, JSetWrapper}
+import scala.language.implicitConversions
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable.HashMap.HashTrieMap
 import scala.collection.immutable.HashSet.{HashSet1, HashTrieSet}
 import scala.collection.immutable.Map.{Map1, Map2, Map3, Map4, WithDefault}
@@ -40,12 +38,12 @@ class Pickling extends Serializable {
   register()
 
   def pickler() = {
-    register() // ensure the custom picklers and constructors are registered also after (de)serialization
+    register()
     new Pickler()
   }
 
   def unpickler() = {
-    register() // ensure the custom picklers and constructors are registered also after (de)serialization
+    register()
     new Unpickler()
   }
 
@@ -53,16 +51,13 @@ class Pickling extends Serializable {
 
   implicit def toUnpickleableRDD(rdd: RDD[Array[Byte]]) = new UnpicklableRDD(rdd)
 
-  implicit def toUnpickleableStream(dstream: DStream[Array[Byte]]) = new UnpicklableDStream(dstream)
-
-  def register() {
+  def register(): Unit = {
     Unpickler.registerConstructor("uuid", "UUID", UUIDUnpickler)
-    Unpickler.registerConstructor("datetime", "date", CassandraLocalDateUnpickler)
+    Unpickler.registerConstructor("datetime", "date", JavaLocalDateUnpickler)
 
     Pickler.registerCustomPickler(classOf[UUID], UUIDPickler)
     Pickler.registerCustomPickler(classOf[UUIDHolder], UUIDPickler)
-    Pickler.registerCustomPickler(classOf[org.joda.time.LocalDate], JodaLocalDatePickler) 
-    Pickler.registerCustomPickler(classOf[com.datastax.driver.core.LocalDate], DatastaxLocalDatePickler) 
+    Pickler.registerCustomPickler(classOf[LocalDate], JavaLocalDatePickler)
     Pickler.registerCustomPickler(classOf[InetAddress], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet4Address], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet6Address], AsStringPickler)
@@ -74,9 +69,21 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(classOf[ArraySeq[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Buffer[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[WrappedArray.ofRef[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[JListWrapper[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[JSetWrapper[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Stream.Cons[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Vector[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set1[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set2[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set3[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set4[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[HashSet1[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[HashTrieSet[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Map[_, _]], MapPickler)
+    Pickler.registerCustomPickler(classOf[WithDefault[_, _]], MapPickler)
+    Pickler.registerCustomPickler(classOf[Map1[_, _]], MapPickler)
+    Pickler.registerCustomPickler(classOf[Map2[_, _]], MapPickler)
+    Pickler.registerCustomPickler(classOf[Map3[_, _]], MapPickler)
+    Pickler.registerCustomPickler(classOf[Map4[_, _]], MapPickler)
+    Pickler.registerCustomPickler(classOf[HashTrieMap[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Tuple1[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple2[_, _]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple3[_, _, _]], ListPickler)
@@ -99,22 +106,6 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(classOf[Tuple20[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple21[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple22[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Vector[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Set[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Set.Set1[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Set.Set2[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Set.Set3[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Set.Set4[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[HashSet1[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[HashTrieSet[_]], ListPickler)
-    Pickler.registerCustomPickler(classOf[Map[_, _]], MapPickler)
-    Pickler.registerCustomPickler(classOf[WithDefault[_, _]], MapPickler)
-    Pickler.registerCustomPickler(classOf[Map1[_, _]], MapPickler)
-    Pickler.registerCustomPickler(classOf[Map2[_, _]], MapPickler)
-    Pickler.registerCustomPickler(classOf[Map3[_, _]], MapPickler)
-    Pickler.registerCustomPickler(classOf[Map4[_, _]], MapPickler)
-    Pickler.registerCustomPickler(classOf[HashTrieMap[_, _]], MapPickler)
-    Pickler.registerCustomPickler(classOf[JMapWrapper[_, _]], MapPickler)
   }
 }
 
@@ -126,10 +117,6 @@ class PicklableRDD(rdd: RDD[_]) {
 
 class UnpicklableRDD(rdd: RDD[Array[Byte]]) {
   def unpickle()(implicit pickling: Pickling) = rdd.flatMap(new BatchUnpickler())
-}
-
-class UnpicklableDStream(dstream: DStream[Array[Byte]]) {
-  def unpickle()(implicit pickling: Pickling) = dstream.flatMap(new BatchUnpickler())
 }
 
 class BatchPickler(batchSize: Int = 1000)(implicit pickling: Pickling)
@@ -182,73 +169,56 @@ object AsStringPickler extends IObjectPickler {
   def pickle(o: Any, out: OutputStream, pickler: Pickler) = pickler.save(o.toString())
 }
 
-object DatastaxLocalDatePickler extends IObjectPickler {
+object JavaLocalDatePickler extends IObjectPickler {
   def pickle(o: Any, out: OutputStream, pickler: Pickler): Unit = {
-    out.write(Opcodes.GLOBAL);
-    out.write("datetime\ndate\n".getBytes());
-    // python itself uses the constructor with a single timestamp byte string of len 4,
-    // we take the easy way out and just provide 3 ints (year/month/day)
-    val date = o.asInstanceOf[com.datastax.driver.core.LocalDate]
-    pickler.save(date.getYear());
-    pickler.save(date.getMonth());    // months start at 0 in java
-    pickler.save(date.getDay());
-    out.write(Opcodes.TUPLE3);
-    out.write(Opcodes.REDUCE);
+    out.write(Opcodes.GLOBAL)
+    out.write("datetime\ndate\n".getBytes())
+    val date = o.asInstanceOf[LocalDate]
+    pickler.save(date.getYear())
+    pickler.save(date.getMonthValue())
+    pickler.save(date.getDayOfMonth())
+    out.write(Opcodes.TUPLE3)
+    out.write(Opcodes.REDUCE)
   }
 }
 
-object JodaLocalDatePickler extends IObjectPickler {
-  def pickle(o: Any, out: OutputStream, pickler: Pickler): Unit = {
-    out.write(Opcodes.GLOBAL);
-    out.write("datetime\ndate\n".getBytes());
-    // python itself uses the constructor with a single timestamp byte string of len 4,
-    // we take the easy way out and just provide 3 ints (year/month/day)
-    val date = o.asInstanceOf[org.joda.time.LocalDate]
-    pickler.save(date.getYear());
-    pickler.save(date.getMonthOfYear());    // months start at 0 in java
-    pickler.save(date.getDayOfMonth());
-    out.write(Opcodes.TUPLE3);
-    out.write(Opcodes.REDUCE);
-  }
-}
-
-object CassandraLocalDateUnpickler extends IObjectConstructor {
+object JavaLocalDateUnpickler extends IObjectConstructor {
   def construct(args: Array[Object]): LocalDate = {
-    args.size match {
+    args.length match {
       case 3 => {
         val year = args(0).asInstanceOf[Int]
         val month = args(1).asInstanceOf[Int]
         val day = args(2).asInstanceOf[Int]
-        LocalDate.fromYearMonthDay(year, month, day)
+        LocalDate.of(year, month, day)
       }
       case 1 => args(0) match {
         case params: String => {
-          if (params.size != 4)
-            throw new PickleException("invalid pickle data for date; expected arg of length 4, got length "+params.size)
+          if (params.length != 4) {
+            throw new PickleException("invalid pickle data for date; expected arg of length 4, got length " + params.length)
+          }
 
-          val yhi = params(0)
-          val ylo = params(1)
-          val month = params(2)
-          val day = params(3)
-          LocalDate.fromYearMonthDay(yhi * 256 + ylo, month, day)
+          val yhi = params(0).toInt
+          val ylo = params(1).toInt
+          val month = params(2).toInt
+          val day = params(3).toInt
+          LocalDate.of(yhi * 256 + ylo, month, day)
         }
         case _ => {
           val params = args(0).asInstanceOf[Array[Byte]]
-          if (params.size != 4)
-            throw new PickleException("invalid pickle data for date; expected arg of length 4, got length "+params.size)
-          val yhi = params(0)&0xff
-          val ylo = params(1)&0xff
-          val month = (params(2)&0xff) // blargh: months start at 0 in java
-          val day = params(3)&0xff
-          val date = LocalDate.fromYearMonthDay(yhi * 256 + ylo, month, day)
-          date
+          if (params.length != 4) {
+            throw new PickleException("invalid pickle data for date; expected arg of length 4, got length " + params.length)
+          }
+          val yhi = params(0) & 0xff
+          val ylo = params(1) & 0xff
+          val month = params(2) & 0xff
+          val day = params(3) & 0xff
+          LocalDate.of(yhi * 256 + ylo, month, day)
         }
       }
-      case _ => throw new PickleException("invalid pickle data for date; expected 1 arg, got "+args.size)
+      case _ => throw new PickleException("invalid pickle data for date; expected 1 arg, got " + args.length)
     }
   }
 }
-
 
 object UUIDPickler extends IObjectPickler {
   def pickle(o: Any, out: OutputStream, pickler: Pickler): Unit = {
@@ -266,7 +236,7 @@ object UUIDPickler extends IObjectPickler {
 
 object UUIDUnpickler extends IObjectConstructor {
   def construct(args: Array[Object]): Object = {
-    args.size match {
+    args.length match {
       case 1 => UUID.fromString(args(0).asInstanceOf[String])
       case _ => new UUIDHolder()
     }
@@ -285,7 +255,7 @@ class UUIDHolder {
 }
 
 class GatheredByteBuffers(buffers: Seq[ByteBuffer]) extends Iterable[ByteBuffer] {
-  def iterator() = buffers.iterator
+  def iterator = buffers.iterator
 }
 
 class GatheringByteBufferPickler extends IObjectPickler {
@@ -293,7 +263,7 @@ class GatheringByteBufferPickler extends IObjectPickler {
     val buffers = o.asInstanceOf[GatheredByteBuffers]
 
     out.write(Opcodes.GLOBAL)
-    out.write("__builtin__\nbytearray\n".getBytes())
+    out.write("builtins\nbytearray\n".getBytes())
 
     out.write(Opcodes.BINSTRING)
 
@@ -327,10 +297,10 @@ object ListPickler extends IObjectPickler {
     pickler.save(
       o match {
         case c: Collection[_] => c
-        case b: Buffer[_] => bufferAsJavaList(b)
-        case s: Seq[_] => seqAsJavaList(s)
-        case p: Product => seqAsJavaList(p.productIterator.toSeq)
-        case s: Set[_] => setAsJavaSet(s)
+        case b: Buffer[_] => b.asJava
+        case s: Seq[_] => s.asJava
+        case p: Product => p.productIterator.toSeq.asJava
+        case s: Set[_] => s.asJava
         case _ => throw new NotSerializableException(o.toString())
       })
   }
@@ -341,7 +311,7 @@ object MapPickler extends IObjectPickler {
     pickler.save(
       o match {
         case m: JMap[_, _] => m
-        case m: Map[_, _] => mapAsJavaMap(m)
+        case m: Map[_, _] => m.asJava
       })
   }
 }
