@@ -15,7 +15,7 @@ credentials ++= {
 
 licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
 
-val sparkVersion = "3.5.5"
+val sparkVersion = "3.5.9"
 
 libraryDependencies ++= Seq(
   "com.datastax.spark" %% "spark-cassandra-connector" % "3.5.1",

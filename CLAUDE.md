@@ -40,11 +40,11 @@ make install-venv
 make start-cassandra
 
 # Run integration tests (requires JAR built and Cassandra running)
-make test-integration-spark-3.5.5
+make test-integration-spark-3.5.9
 
 # Run tests directly via spark-submit
 source venv/bin/activate
-lib/spark-3.5.5-bin-hadoop3/bin/spark-submit \
+lib/spark-3.5.9-bin-hadoop3/bin/spark-submit \
     --master local[*] \
     --driver-memory 512m \
     --conf spark.cassandra.connection.host="localhost" \

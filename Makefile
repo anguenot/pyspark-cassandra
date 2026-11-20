@@ -63,10 +63,10 @@ test-integration-setup: start-cassandra
 
 test-integration-teardown: stop-cassandra
 	
-test-integration-matrix: test-integration-spark-3.5.5
+test-integration-matrix: test-integration-spark-3.5.9
 
-test-integration-spark-3.5.5:
-	$(call test-integration-for-version,3.5.5,hadoop3)
+test-integration-spark-3.5.9:
+	$(call test-integration-for-version,3.5.9,hadoop3)
 
 define test-integration-for-version
 	echo ======================================================================
@@ -93,6 +93,7 @@ endef
 
 dist: clean-pyc
 	sbt -batch assembly
+	mkdir -p python/pyspark_cassandra/jars
 	cp target/scala-$(SCALA_TARGET_VERSION)/pyspark-cassandra-assembly-$(VERSION).jar \
 		python/pyspark_cassandra/jars/
 	cp README.md python/README.md
