@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 from functools import partial
 from copy import copy
 from itertools import groupby
@@ -23,18 +22,17 @@ from .format import ColumnSelector, RowFormat
 from .types import Row
 from .util import as_java_array, as_java_object, helper
 
-if sys.version_info > (3,):
-    long = int  # @ReservedAssignment
 
 try:
     import pandas as pd  # @UnusedImport, import used in SpanningRDD
-except:
+except ImportError:
     pass
 
 
-def saveToCassandra(rdd, keyspace=None, table=None, columns=None,
-                    row_format=None, keyed=None,
-                    write_conf=None, connection_config=None, **write_conf_kwargs):
+def saveToCassandra(rdd, keyspace=None, table=None,
+                    columns=None, row_format=None, keyed=None,
+                    write_conf=None, connection_config=None,
+                    **write_conf_kwargs):
     """
         Saves an RDD to Cassandra. The RDD is expected to contain dicts with
         keys mapping to CQL columns.
@@ -65,7 +63,8 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None,
         @param write_conf(WriteConf):
             A WriteConf object to use when saving to Cassandra
         @param connection_config(ConnectionConf)
-            A ConnectionConf object to use when saving to non-default Cassandra cluster
+            A ConnectionConf object to use when saving to non-default
+            Cassandra cluster
         @param **write_conf_kwargs:
             WriteConf parameters to use when saving to Cassandra
     """
@@ -85,7 +84,8 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None,
     if isinstance(columns, dict):
         # convert the columns to a map where the value is the
         # action inside Cassandra
-        columns = as_java_object(rdd.ctx._gateway, columns) if columns else None
+        columns = as_java_object(
+            rdd.ctx._gateway, columns) if columns else None
     else:
         # convert the columns to a string array
         columns = as_java_array(rdd.ctx._gateway, "String",
@@ -99,14 +99,18 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None,
                    keyed,
                    write_conf)
     if connection_config:
-        conn_conf = as_java_object(rdd.ctx._gateway, ConnectionConf.build(**connection_config).settings())
+        conn_conf = as_java_object(
+            rdd.ctx._gateway,
+            ConnectionConf.build(**connection_config).settings())
         save = partial(save, conn_conf)
     save()
 
 
-def deleteFromCassandra(rdd, keyspace=None, table=None, deleteColumns=None,
-                        keyColumns=None, row_format=None, keyed=None,
-                        write_conf=None, connection_config=None, **write_conf_kwargs):
+def deleteFromCassandra(rdd, keyspace=None, table=None,
+                        deleteColumns=None, keyColumns=None,
+                        row_format=None, keyed=None,
+                        write_conf=None, connection_config=None,
+                        **write_conf_kwargs):
     """
         Delete data from Cassandra table, using data from the RDD as primary
         keys. Uses the specified column names.
@@ -141,7 +145,8 @@ def deleteFromCassandra(rdd, keyspace=None, table=None, deleteColumns=None,
         @param write_conf(WriteConf):
             A WriteConf object to use when saving to Cassandra
         @param connection_config(ConnectionConf)
-            A ConnectionConf object to use when saving to non-default Cassandra cluster
+            A ConnectionConf object to use when saving to
+            non-default Cassandra cluster
         @param **write_conf_kwargs:
             WriteConf parameters to use when saving to Cassandra
     """
@@ -172,7 +177,9 @@ def deleteFromCassandra(rdd, keyspace=None, table=None, deleteColumns=None,
                         keyed,
                         write_conf)
     if connection_config:
-        conn_conf = as_java_object(rdd.ctx._gateway, ConnectionConf.build(**connection_config).settings())
+        conn_conf = as_java_object(
+            rdd.ctx._gateway,
+            ConnectionConf.build(**connection_config).settings())
         fn_delete = partial(fn_delete, conn_conf)
     fn_delete()
 
@@ -252,7 +259,7 @@ class _CassandraRDD(RDD):
     def limit(self, limit):
         """Creates a CassandraRDD with the limit clause applied."""
         self._limit = limit
-        return self._specialize('limit', long(limit))
+        return self._specialize('limit', int(limit))
 
     def take(self, num):
         """Takes at most 'num' records from the Cassandra table.
@@ -317,7 +324,8 @@ class _CassandraRDD(RDD):
 
 
 class CassandraTableScanRDD(_CassandraRDD):
-    def __init__(self, ctx, keyspace, table, row_format=None, read_conf=None, connection_config=None,
+    def __init__(self, ctx, keyspace, table, row_format=None,
+                 read_conf=None, connection_config=None,
                  **read_conf_kwargs):
         super(CassandraTableScanRDD, self).__init__(ctx, keyspace, table,
                                                     row_format, read_conf,
@@ -326,9 +334,13 @@ class CassandraTableScanRDD(_CassandraRDD):
         self._key_by = ColumnSelector.none()
 
         read_conf = as_java_object(ctx._gateway, self.read_conf.settings())
-        fn_read_table = partial(self._helper.cassandraTable, ctx._jsc, keyspace, table, read_conf)
+        fn_read_table = partial(
+            self._helper.cassandraTable, ctx._jsc,
+            keyspace, table, read_conf)
         if connection_config:
-            conn_conf = as_java_object(ctx._gateway, ConnectionConf.build(**connection_config).settings())
+            conn_conf = as_java_object(
+                ctx._gateway,
+                ConnectionConf.build(**connection_config).settings())
             fn_read_table = partial(fn_read_table, conn_conf)
         self.crdd = fn_read_table()
 
@@ -411,7 +423,6 @@ class SpanningRDD(RDD):
         jrdd = self._helper.spanBy(self._crdd, columns)
         rdd = RDD(jrdd, self.ctx)
 
-        global pd
         if index_by and pd:
             return rdd.mapValues(
                 lambda _: _.set_index(*[str(c) for c in index_by]))
@@ -434,7 +445,8 @@ def joinWithCassandraTable(left_rdd, keyspace, table, connection_config=None):
         @param table(string):
             The CQL table to join on.
         @param connection_config(ConnectionConf)
-            A ConnectionConf object to use when saving to non-default Cassandra cluster
+            A ConnectionConf object to use when saving to
+            non-default Cassandra cluster
     """
     return CassandraJoinRDD(left_rdd, keyspace, table, connection_config)
 
@@ -446,9 +458,13 @@ class CassandraJoinRDD(_CassandraRDD):
 
     def __init__(self, left_rdd, keyspace, table, connection_config=None):
         super(CassandraJoinRDD, self).__init__(left_rdd.ctx, keyspace, table)
-        fn_read_rdd = partial(self._helper.joinWithCassandraTable, left_rdd._jrdd, keyspace, table,)
+        fn_read_rdd = partial(
+            self._helper.joinWithCassandraTable,
+            left_rdd._jrdd, keyspace, table)
         if connection_config:
-            conn_conf = as_java_object(left_rdd.ctx._gateway, ConnectionConf.build(**connection_config).settings())
+            conn_conf = as_java_object(
+                left_rdd.ctx._gateway,
+                ConnectionConf.build(**connection_config).settings())
             fn_read_rdd = partial(fn_read_rdd, conn_conf)
         self.crdd = fn_read_rdd()
 

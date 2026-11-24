@@ -16,10 +16,9 @@ import time
 import unittest
 import uuid
 import warnings
-from _functools import partial
+from functools import partial
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from itertools import chain
 from uuid import UUID
 
 from cassandra import ConsistencyLevel
@@ -27,11 +26,7 @@ from cassandra.cluster import Cluster
 from cassandra.util import uuid_from_time
 from math import sqrt
 from pyspark import SparkConf
-from pyspark.accumulators import AddingAccumulatorParam
-from pyspark.streaming.context import StreamingContext
-
 import pyspark_cassandra
-import pyspark_cassandra.streaming
 from pyspark_cassandra import CassandraSparkContext, Row, RowFormat, UDT
 from pyspark_cassandra.conf import ReadConf, WriteConf
 
@@ -595,47 +590,11 @@ class ConfTest(SimpleTypesTestBase):
         save(ttl=5)
         save(ttl=timedelta(minutes=30))
         save(ttl='int')
-        save(timestamp=time.clock() * 1000 * 1000)
+        save(timestamp=time.time() * 1000 * 1000)
         save(timestamp=datetime.now())
         save(metrics_enabled=True)
         save(write_conf=WriteConf(ttl=3, metrics_enabled=True))
         save(ignore_nulls=True)
-
-
-class StreamingTest(SimpleTypesTestBase):
-    interval = .1
-
-    @classmethod
-    def setUpClass(cls):
-        super(StreamingTest, cls).setUpClass()
-        cls.ssc = StreamingContext(cls.sc, cls.interval)
-
-    def setUp(self):
-        super(StreamingTest, self).setUp()
-        self.size = 10
-        self.count = 3
-        self.rows = [
-            [
-                {'key': str(j * self.size + i), 'text': str(j * self.size + i)}
-                for i in range(self.size)
-            ]
-            for j in range(self.count)
-        ]
-        self.rdds = list(map(self.sc.parallelize, self.rows))
-        self.stream = self.ssc.queueStream(self.rdds)
-
-    def test(self):
-        self.stream.saveToCassandra(self.keyspace, self.table)
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.count + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        tbl = self.rdd(row_format=RowFormat.TUPLE).select('key', 'text')
-        read = tbl.by_primary_key().collect()
-        self.assertEqual(len(read), self.size * self.count)
-        for (k, v) in read:
-            self.assertEqual(k, v)
 
 
 class JoinRDDTest(SimpleTypesTestBase):
@@ -794,253 +753,6 @@ class JoinClusterRDDTest(SimpleTypesTestBase):
         # TODO test
         # .where()
         # .limit()
-
-
-class JoinDStreamTest(StreamingTest):
-    def setUp(self):
-        super(JoinDStreamTest, self).setUp()
-        self.joined_rows = self.sc.accumulator(
-            [], accum_param=AddingAccumulatorParam([]))
-
-    def checkRDD(self, time, rdd):
-        self.joined_rows += rdd.collect()
-
-    def test(self):
-        rows = list(chain(*self.rows))
-        rows_by_key = {row['key']: row for row in rows}
-
-        self.sc \
-            .parallelize(rows) \
-            .saveToCassandra(self.keyspace, self.table)
-
-        self.stream \
-            .joinWithCassandraTable(self.keyspace, self.table, ['text'],
-                                    ['key']) \
-            .foreachRDD(self.checkRDD)
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.count + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        joined_rows = self.joined_rows.value
-        self.assertEqual(len(joined_rows), len(rows))
-        for row in joined_rows:
-            self.assertEqual(len(row), 2)
-            left, right = row
-
-            self.assertEqual(type(left), type(right))
-            self.assertEqual(rows_by_key[left['key']], left)
-            self.assertEqual(left['text'], right['text'])
-            self.assertEqual(len(right), 1)
-
-class JoinClusterDStreamTest(StreamingTest):
-    def setUp(self):
-        super(JoinClusterDStreamTest, self).setUp()
-        self.joined_rows = self.sc.accumulator(
-            [], accum_param=AddingAccumulatorParam([]))
-
-    def checkRDD(self, time, rdd):
-        self.joined_rows += rdd.collect()
-
-    def test(self):
-        rows = list(chain(*self.rows))
-        rows_by_key = {row['key']: row for row in rows}
-
-        self.sc \
-            .parallelize(rows) \
-            .saveToCassandra(self.keyspace, self.table)
-
-        self.stream \
-            .joinWithCassandraTable(
-            self.keyspace, self.table, ['text'],['key'],
-            connection_config={"spark_cassandra_connection_host": "localhost"}
-        ).foreachRDD(self.checkRDD)
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.count + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        joined_rows = self.joined_rows.value
-        self.assertEqual(len(joined_rows), len(rows))
-        for row in joined_rows:
-            self.assertEqual(len(row), 2)
-            left, right = row
-
-            self.assertEqual(type(left), type(right))
-            self.assertEqual(rows_by_key[left['key']], left)
-            self.assertEqual(left['text'], right['text'])
-            self.assertEqual(len(right), 1)
-
-
-class DeleteFromCassandraStreamingTest(SimpleTypesTestBase):
-    size = 10
-    interval = .1
-
-    def setUp(self):
-        super(DeleteFromCassandraStreamingTest, self).setUp()
-        self.ssc = StreamingContext(self.sc, self.interval)
-
-        self.rdds = [self.sc.parallelize(range(0, self.size)).map(
-            lambda i: {'key': i, 'int': i, 'text': i})]
-        data = self.rdds[0]
-        data.saveToCassandra(self.keyspace, self.table)
-
-        # verify the RDD length and actual content
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), self.size)
-
-        # verify we have actually data for `text` and `int`
-        row = data.select('text', 'int').where('key=?', '0').first()
-        self.assertEqual(row.text, u'0')
-        self.assertEqual(row.int, 0)
-
-        # stream we will use in tests.
-        self.stream = self.ssc.queueStream(self.rdds)
-
-    def test_delete_single_column(self):
-        self.stream \
-            .deleteFromCassandra(self.keyspace, self.table,
-                                 deleteColumns=['text'])
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), self.size)
-
-        # verify we have actually data for `text` and `int`
-        row = data.select('text', 'int').where('key=?', '0').first()
-        self.assertEqual(row.int, 0)
-        self.assertIsNone(row.text)
-
-    def test_delete_2_columns(self):
-        self.stream \
-            .deleteFromCassandra(self.keyspace, self.table,
-                                 deleteColumns=['text', 'int'])
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), self.size)
-
-        # verify we have actually data for `text` and `int`
-        row = data.select('text', 'int').where('key=?', '0').first()
-        self.assertIsNone(row.int)
-        self.assertIsNone(row.text)
-
-    def test_delete_all_rows_default(self):
-        self.stream \
-            .deleteFromCassandra(self.keyspace, self.table)
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), 0)
-
-    def test_delete_all_rows_explicit(self):
-        self.stream \
-            .deleteFromCassandra(self.keyspace, self.table, keyColumns=['key'])
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), 0)
-
-class DeleteFromCassandraClusterStreamingTest(SimpleTypesTestBase):
-    size = 10
-    interval = .1
-
-    def setUp(self):
-        super(DeleteFromCassandraClusterStreamingTest, self).setUp()
-        self.ssc = StreamingContext(self.sc, self.interval)
-
-        self.rdds = [self.sc.parallelize(range(0, self.size)).map(
-            lambda i: {'key': i, 'int': i, 'text': i})]
-        data = self.rdds[0]
-        data.saveToCassandra(self.keyspace, self.table)
-
-        # verify the RDD length and actual content
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), self.size)
-
-        # verify we have actually data for `text` and `int`
-        row = data.select('text', 'int').where('key=?', '0').first()
-        self.assertEqual(row.text, u'0')
-        self.assertEqual(row.int, 0)
-
-        # stream we will use in tests.
-        self.stream = self.ssc.queueStream(self.rdds)
-
-    def test_delete_single_column(self):
-        self.stream.deleteFromCassandra(
-            self.keyspace, self.table,
-            deleteColumns=['text'],
-            connection_config={"spark_cassandra_connection_host": "localhost"}
-        )
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), self.size)
-
-        # verify we have actually data for `text` and `int`
-        row = data.select('text', 'int').where('key=?', '0').first()
-        self.assertEqual(row.int, 0)
-        self.assertIsNone(row.text)
-
-    def test_delete_2_columns(self):
-        self.stream.deleteFromCassandra(
-            self.keyspace, self.table,
-            deleteColumns=['text', 'int'],
-            connection_config={"spark_cassandra_connection_host": "localhost"}
-        )
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), self.size)
-
-        # verify we have actually data for `text` and `int`
-        row = data.select('text', 'int').where('key=?', '0').first()
-        self.assertIsNone(row.int)
-        self.assertIsNone(row.text)
-
-    def test_delete_all_rows_default(self):
-        self.stream.deleteFromCassandra(
-            self.keyspace, self.table,
-            connection_config={"spark_cassandra_connection_host": "localhost"}
-        )
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), 0)
-
-    def test_delete_all_rows_explicit(self):
-        self.stream.deleteFromCassandra(
-            self.keyspace, self.table, keyColumns=['key'],
-            connection_config={"spark_cassandra_connection_host": "localhost"}
-        )
-
-        self.ssc.start()
-        self.ssc.awaitTermination((self.size + 1) * self.interval)
-        self.ssc.stop(stopSparkContext=False, stopGraceFully=True)
-
-        data = self.rdd()
-        self.assertEqual(len(data.collect()), 0)
 
 
 class DeleteFromCassandraTest(SimpleTypesTestBase):

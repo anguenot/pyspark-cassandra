@@ -17,24 +17,24 @@ package pyspark_util
 import java.lang.{Boolean => JBoolean}
 import java.util.{List => JList}
 
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.Buffer
 import scala.reflect.ClassTag
 
 object Conversions {
-  def asArray[T: ClassTag](c: Any): Array[T] = c match {
-    case a: Array[T] => a
-    case b: Buffer[T] => b.toArray
-    case l: List[T] => l.toArray
-    case l: JList[T] => asScalaBuffer(l).toArray
+  def asArray[T: ClassTag](c: Any): Array[T] = (c: @unchecked) match {
+    case a: Array[T @unchecked] => a
+    case b: Buffer[T @unchecked] => b.toArray
+    case l: List[T @unchecked] => l.toArray
+    case l: JList[T @unchecked] => l.asScala.toArray
     case _ => throw new IllegalArgumentException(c.getClass() + " can't be converted to an Array")
   }
 
-  def asSeq[T: ClassTag](c: Any): Seq[T] = c match {
-    case a: Array[T] => a
-    case b: Buffer[T] => b
-    case l: List[T] => l
-    case l: JList[T] => asScalaBuffer(l).toSeq
+  def asSeq[T: ClassTag](c: Any): Seq[T] = (c: @unchecked) match {
+    case a: Array[T @unchecked] => a.toSeq
+    case b: Buffer[T @unchecked] => b.toSeq
+    case l: List[T @unchecked] => l
+    case l: JList[T @unchecked] => l.asScala.toSeq
     case _ => throw new IllegalArgumentException(c.getClass() + " can't be converted to a Seq")
   }
 

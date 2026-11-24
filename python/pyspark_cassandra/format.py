@@ -21,7 +21,7 @@ class RowFormat(object):
     values = (DICT, TUPLE, ROW)
 
     def __init__(self):
-        raise NotImplemented(
+        raise NotImplementedError(
             "RowFormat is not meant to be initialized, use e.g. "
             "RowFormat.DICT")
 

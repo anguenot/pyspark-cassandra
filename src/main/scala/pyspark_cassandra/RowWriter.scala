@@ -20,7 +20,7 @@ import com.datastax.spark.connector.ColumnRef
 import com.datastax.spark.connector.cql.TableDef
 import com.datastax.spark.connector.writer.{RowWriter, RowWriterFactory}
 
-import scala.collection.{IndexedSeq, Seq}
+import scala.jdk.CollectionConverters._
 
 class GenericRowWriterFactory(format: Option[Format.Value], keyed: Option[Boolean]) extends RowWriterFactory[Any] {
   def rowWriter(table: TableDef, selectedColumns: IndexedSeq[ColumnRef]): RowWriter[Any] = {

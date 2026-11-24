@@ -186,13 +186,11 @@ def _create_spanning_dataframe(cnames, ctypes, cvalues):
 
     # convert the column values to numpy arrays if numpy is available
     # otherwise use lists
-    global np
     convert = _to_nparrays if np else _to_list
     arrays = {n: convert(t, v) for n, t, v in zip(cnames, ctypes, cvalues)}
 
     # if pandas is available, provide the arrays / lists as DataFrame
     # otherwise use pyspark_cassandra.Row
-    global pd
     if pd:
         return pd.DataFrame(arrays)
     else:
@@ -263,7 +261,7 @@ def _decode_primitives(ctype, cvalue):
     primitives = _unpack(fmt, cvalue)
 
     if ctype == '>M8[ms]':
-        return [datetime.utcfromtimestamp(l).replace(tzinfo=UTC) for l in
+        return [datetime.utcfromtimestamp(ts).replace(tzinfo=UTC) for ts in
                 primitives]
     else:
         return primitives

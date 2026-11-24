@@ -1,4 +1,2 @@
-resolvers += "Spark Package Main Repo" at "https://repos.spark-packages.org"
-
-addSbtPlugin("org.spark-packages" % "sbt-spark-package" % "0.2.6")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "2.1.5")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
