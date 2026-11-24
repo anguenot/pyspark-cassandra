@@ -31,7 +31,7 @@ setup(
     name='pyspark_cassandra',
     maintainer='Julien Anguenot',
     maintainer_email='julien@anguenot.org',
-    version='3.5.0',
+    version='3.5.1',
     description='PySpark RDD support for Apache Cassandra via the '
                 'Spark Cassandra Connector.',
     long_description=long_description,
